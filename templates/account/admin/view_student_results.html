@@ -1,0 +1,197 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0px; right: 0px;">
+                    <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                    <defs>
+                        <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fff"></stop>
+                            <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="row">
+                    <div class="col-sm-8 col-12">
+                        <div class="row">
+                            <div class="col-12">
+                                <h1 class="mb-0 hp-text-color-black-0">Student Grades</h1>
+                                <h4 class="mt-8 hp-text-color-black-0">Academic Performance for {{ student.full_name }} - {{ session.name }} Term {{ term_display }}</h4>
+                                <p class="mt-2 hp-text-color-black-0">Class: {{ student.current_class.level|default:'N/A' }}{% if student.current_section %} {{ student.current_section.suffix }}{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="row g-32">
+                <div class="col-12">
+                    <div class="card hp-bg-color-dark-90 p-24">
+                        {% if results %}
+                            <div class="d-flex justify-content-between align-items-center mb-16 flex-wrap">
+                                <h3><i>Cognitive Performance</i></h3>
+                                {% if results.0.upload_date %}
+                                    <div class="alert alert-dark mb-0 py-2 px-3">
+                                        <strong>Results Uploaded:</strong> {{ results.0.upload_date|date:"F d, Y" }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Subject</th>
+                                            {% if is_nursery %}
+                                                <th>Total Marks (100)</th>
+                                            {% elif is_primary %}
+                                                <th>Test (20)</th>
+                                                <th>Homework (10)</th>
+                                                <th>Classwork (10)</th>
+                                                <th>Exam (60)</th>
+                                            {% else %}
+                                                <th>C.A (10)</th>
+                                                <th>Test 1 (10)</th>
+                                                <th>Test 2 (10)</th>
+                                                <th>Exam (70)</th>
+                                            {% endif %}
+                                            <th>Total (100)</th>
+                                            <th>Grade</th>
+                                            {% if not is_nursery and not is_primary %}
+                                                <th>G.P</th>
+                                            {% endif %}
+                                            <th>Description</th>
+                                            <th>Subject Position</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for result in results %}
+                                            {% if result.total_score > 0 %}
+                                                <tr>
+                                                    <td>{{ result.subject.name }}</td>
+                                                    {% if is_nursery %}
+                                                        <td>{{ result.total_marks|floatformat:1|default:"-" }}</td>
+                                                    {% elif is_primary %}
+                                                        <td>{{ result.test|floatformat:1|default:"-" }}</td>
+                                                        <td>{{ result.homework|floatformat:1|default:"-" }}</td>
+                                                        <td>{{ result.classwork|floatformat:1|default:"-" }}</td>
+                                                        <td>{{ result.nursery_primary_exam|floatformat:1|default:"-" }}</td>
+                                                    {% else %}
+                                                        <td>{{ result.ca|floatformat:1|default:"-" }}</td>
+                                                        <td>{{ result.test_1|floatformat:1|default:"-" }}</td>
+                                                        <td>{{ result.test_2|floatformat:1|default:"-" }}</td>
+                                                        <td>{{ result.exam|floatformat:1|default:"-" }}</td>
+                                                    {% endif %}
+                                                    <td>{{ result.total_score|floatformat:1 }}</td>
+                                                    <td>{{ result.grade|default:"-" }}</td>
+                                                    {% if not is_nursery and not is_primary %}
+                                                        <td>{{ result.grade_point|floatformat:1|default_if_none:"-" }}</td>
+                                                    {% endif %}
+                                                    <td>{{ result.description|default:"-" }}</td>
+                                                    <td>{{ result.subject_position|default:"-" }}</td>
+                                                </tr>
+                                            {% else %}
+                                                <tr>
+                                                    <td>{{ result.subject.name }}</td>
+                                                    <td colspan="{% if is_nursery %}5{% elif is_primary %}8{% else %}9{% endif %}" class="text-center">
+                                                        <div class="alert alert-dark mb-0">
+                                                            <i class="bi bi-hourglass-split me-2"></i><strong>Awaiting Teacher Input</strong>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-12">
+                                <div class="cards-grid">
+                                    <div class="info-card">
+                                        <h5>Performance Summary</h5>
+                                        <div class="info-item">
+                                            <span>Average Score:</span>
+                                            <strong>{{ average_score|floatformat:2 }}%</strong>
+                                        </div>
+                                        {% if not is_nursery and not is_primary %}
+                                            <div class="info-item">
+                                                <span>Average Grade Point:</span>
+                                                <strong>{{ average_grade_point|floatformat:2 }}</strong>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="info-card">
+                                        <h5>Section Standing</h5>
+                                        <div class="info-item">
+                                            <span>Position in {{ student.current_section|default:'Section' }}:</span>
+                                            <strong>{{ class_position_marks|default:"-" }}</strong>
+                                        </div>
+                                        <div class="info-item">
+                                            <span>Out Of:</span>
+                                            <strong>{{ total_in_section|default:"-" }}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="info-card">
+                                        <h5>Important Dates</h5>
+                                        <div class="info-item">
+                                            <span>Results Posted On:</span>
+                                            <strong>{{ results.0.upload_date|date:"F d, Y"|default:"Not available" }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-dark hp-p1-body">
+                                <i class="bi bi-info-circle-fill me-2"></i>No results available for {{ session.name|default:'N/A' }} Term {{ term_display|default:'N/A' }}.
+                            </div>
+                        {% endif %}
+                        <a href="{% url 'admin_manage_result_access_requests' %}" class="btn btn-primary mt-24">Back to Requests</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+    .info-card {
+        border: 1px solid #000;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: left;
+    }
+    .info-card h5 {
+        margin-bottom: 1rem;
+        font-size: 1.25rem;
+        font-weight: bold;
+        border-bottom: 1px solid #000;
+        padding-bottom: 0.5rem;
+    }
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+    }
+    .info-item strong {
+        font-weight: bold;
+    }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize tooltips
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    @media print {
+        .no-print { display: none !important; }
+        .hp-bg-color-dark-90 { background: none; }
+        .table { font-size: 12px; }
+        .print-header { display: block; text-align: center; margin-bottom: 20px; }
+    }
+    .fee-highlight { font-weight: bold; }
+    .paid-highlight { font-weight: bold; color: #2e7d32; }
+    .outstanding-highlight { font-weight: bold; color: #d32f2f; }
+    .card-stats { border-radius: 12px; padding: 16px; text-align: center; }
+    .table th, .table td { vertical-align: middle; }
+    .table th { font-size: 1rem; }
+    .table td { font-size: 0.95rem; }
+    .progress-bar-paid { background-color: #2e7d32; }
+</style>
+
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0px; right: 0px;">
+                    <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                    <defs>
+                        <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fff"></stop>
+                            <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <h1 class="mb-0 hp-text-color-black-0">Fee Statistics</h1>
+                <h4 class="mt-8 hp-text-color-black-0">Expected vs. Paid Fees for {{ current_session.name }} Term {{ current_term }}</h4>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24" style="border-radius: 16px;">
+                <div class="no-print mb-4">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="session_id" class="form-label hp-p1-body">Session</label>
+                            <select class="form-select bg-dark text-white" id="session_id" name="session_id">
+                                {% for session in sessions %}
+                                    <option value="{{ session.pk }}" {% if session == current_session %}selected{% endif %}>{{ session.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="term" class="form-label hp-p1-body">Term</label>
+                            <select class="form-select bg-dark text-white" id="term" name="term">
+                                {% for value, label in term_choices %}
+                                    <option value="{{ value }}" {% if value == current_term %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="print-header" style="display: none;">
+                    <h2>Fee Statistics - {{ current_session.name }} Term {{ current_term }}</h2>
+                    <p>Rehoboth International School of Excellence</p>
+                    <p>Generated on {{ 'now'|date:'d M Y' }}</p>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card-stats">
+                            <h3 class="fee-highlight">Total Expected</h3>
+                            <p class="hp-p1-body">{{ total_expected|floatformat:2 }} XOF</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card-stats">
+                            <h3 class="paid-highlight">Total Paid</h3>
+                            <p class="hp-p1-body">{{ total_paid|floatformat:2 }} XOF</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card-stats">
+                            <h3 class="outstanding-highlight">Total Outstanding</h3>
+                            <p class="hp-p1-body">{{ total_outstanding|floatformat:2 }} XOF</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Section</th>
+                                <th>Students</th>
+                                <th class="text-end fee-highlight">Expected (XOF)</th>
+                                <th class="text-end paid-highlight">Paid (XOF)</th>
+                                <th class="text-end outstanding-highlight">Outstanding (XOF)</th>
+                                <th class="text-end">Paid (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in stats_data %}
+                                <tr>
+                                    <td>{{ item.section }}</td>
+                                    <td>{{ item.student_count }}</td>
+                                    <td class="text-end fee-highlight">{{ item.expected|floatformat:2 }}</td>
+                                    <td class="text-end paid-highlight">{{ item.paid|floatformat:2 }}</td>
+                                    <td class="text-end outstanding-highlight">{{ item.outstanding|floatformat:2 }}</td>
+                                    <td class="text-end">
+                                        <div class="progress" style="height: 20px; width: 120px; float: right;">
+                                            <div class="progress-bar progress-bar-paid" role="progressbar" style="width: {{ item.percentage_paid }}%;" aria-valuenow="{{ item.percentage_paid }}" aria-valuemin="0" aria-valuemax="100">
+                                                {{ item.percentage_paid|floatformat:2 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="6" class="text-center">No fee data available</td></tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot style="background-color: #1a1a1a; font-size: 1.1rem;">
+                            <tr>
+                                <td colspan="2" class="text-end">Total:</td>
+                                <td class="text-end fee-highlight">{{ total_expected|floatformat:2 }}</td>
+                                <td class="text-end paid-highlight">{{ total_paid|floatformat:2 }}</td>
+                                <td class="text-end outstanding-highlight">{{ total_outstanding|floatformat:2 }}</td>
+                                <td class="text-end">
+                                    <div class="progress" style="height: 20px; width: 120px; float: right;">
+                                        <div class="progress-bar progress-bar-paid" role="progressbar" style="width: {{ total_percentage_paid }}%;" aria-valuenow="{{ total_percentage_paid }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ total_percentage_paid|floatformat:2 }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="no-print mt-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <button class="btn btn-dark w-100" onclick="window.print()">Print Report</button>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'admin_fee_statistics_pdf' %}?session_id={{ current_session.id }}&term={{ current_term }}" class="btn btn-primary w-100">Download PDF Report</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

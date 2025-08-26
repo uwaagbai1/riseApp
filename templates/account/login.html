@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html dir="ltr">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="author" content="Hypeople">
+    <meta name="description" content="Responsive, Highly Customizable Dashboard Template" />
+    <link rel="icon" type="image/png" href="{% static 'main/images/favicon.svg' %}">
+    <link rel="mask-icon" href="{% static 'accounts/app-assets/favicon/safari-pinned-tab.svg' %}" color="#0010f7">
+    <meta name="msapplication-TileColor" content="#0010f7">
+    <meta name="theme-color" content="#ffffff">
+    <link href="{% static 'accounts/fonts.googleapis.com/css2496c.css?family=Poppins:wght@300;400;500;600;700&display=swap' %}" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/plugin/swiper-bundle.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/icons/iconly/index.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/icons/remix-icon/index.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/bootstrap.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/colors.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/base/typography.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/base/base.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/theme/colors-dark.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/theme/theme-dark.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/custom-rtl.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/layouts/page-content.css' %}">
+    <link rel="stylesheet" type="text/type" href="{% static 'accounts/app-assets/css/components.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/layouts/customizer.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/pages/authentication.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/assets/css/style.css' %}">
+    <title>Login :: RISE Portal</title>
+    <script>
+        ! function(t, h, e, j, s, n) {
+            t.hj = t.hj || function() { (t.hj.q = t.hj.q || []).push(arguments) },
+            t._hjSettings = { hjid: 2628580, hjsv: 6 },
+            s = h.getElementsByTagName("head")[0],
+            (n = h.createElement("script")).async = 1,
+            n.src = "https://static.hotjar.com/c/hotjar-" + t._hjSettings.hjid + ".js?sv=" + t._hjSettings.hjsv,
+            s.appendChild(n)
+        }(window, document);
+    </script>
+</head>
+<body class="hp-bg-color-dark-90">
+    <div class="row hp-authentication-page h-100 m-0">
+        <div class="col-lg-6 col-12 hp-bg-black-20 hp-bg-color-dark-80 d-flex align-items-center justify-content-center p-0">
+            <div class="text-center p-32 p-sm-64">
+                <a href="{% url 'index' %}" class="d-block mb-32">
+                    <img src="{% static 'main/images/logo.png' %}" alt="Rehoboth International School of Excellence" height="150" width="150">
+                </a>
+                <h2 class="hp-text-color-black-100 hp-text-color-dark-0 mb-16">Welcome to RISE Portal</h2>
+                <p class="hp-p1-body hp-text-color-black-80 hp-text-color-dark-30">Access your personalized dashboard as a student, teacher, or admin.</p>
+                <img class="hp-dark-none mt-32 w-75 mx-auto" src="{% static 'accounts/app-assets/img/pages/authentication/authentication-bg.svg' %}" alt="Background Image">
+                <img class="hp-dark-block mt-32 w-75 mx-auto" src="{% static 'accounts/app-assets/img/pages/authentication/authentication-bg-dark.svg' %}" alt="Background Image">
+            </div>
+        </div>
+        <div class="col-lg-6 col-12 d-flex align-items-center justify-content-center p-32 p-sm-64">
+            <div class="w-100" style="max-width: 400px;">
+                <h1 class="mb-16 hp-text-color-black-100 hp-text-color-dark-0">Sign In</h1>
+                <p class="hp-p1-body hp-text-color-black-60 hp-text-color-dark-40 mb-32">Enter your credentials to access your account.</p>
+                {% if messages %}
+                    <div class="alert alert-danger" role="alert">
+                        {% for message in messages %}
+                            {{ message }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <form id="loginForm" method="POST" action="{% url 'login' %}" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-24">
+                        <label for="loginUsername" class="form-label">Admission Number or Staff Email</label>
+                        <input type="text" class="form-control" id="loginUsername" name="username" required aria-describedby="usernameFeedback">
+                        <div id="usernameFeedback" class="invalid-feedback">Please enter a valid admission number or email.</div>
+                    </div>
+                    <div class="mb-24">
+                        <label for="loginPassword" class="form-label">Password</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="loginPassword" name="password" required aria-describedby="passwordFeedback">
+                            <button type="button" class="btn btn-outline-secondary" onclick="togglePassword()">
+                                <i class="iconly-Curved-Show"></i>
+                            </button>
+                        </div>
+                        <div id="passwordFeedback" class="invalid-feedback">Please enter your password.</div>
+                    </div>
+                    <div class="row align-items-center justify-content-between mb-24">
+                        <div class="col hp-flex-none w-auto">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="rememberMe" name="remember">
+                                <label class="form-check-label ps-4" for="rememberMe">Remember me</label>
+                            </div>
+                        </div>
+                        <div class="col hp-flex-none w-auto">
+                            <a href="#" class="hp-text-color-primary-1">Forgot Password?</a>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                </form>
+                <div class="mt-32 text-center">
+                    <p class="hp-p1-body hp-text-color-black-60 hp-text-color-dark-40 mb-8">Copyright {% now "Y" %} Rehoboth International School of Excellence</p>
+                    <div class="d-flex justify-content-center gap-16">
+                        <a href="javascript:;" class="hp-text-color-black-80 hp-text-color-dark-40">Privacy Policy</a>
+                        <a href="javascript:;" class="hp-text-color-black-80 hp-text-color-dark-40">Terms of Use</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="{% static 'accounts/app-assets/js/plugin/jquery.min.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/plugin/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/plugin/swiper-bundle.min.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/plugin/jquery.mask.min.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/plugin/autocomplete.min.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/plugin/moment.min.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/layouts/header-search.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/layouts/sider.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/components/input-number.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/base/index.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/customizer.js' %}"></script>
+    <script src="{% static 'accounts/assets/js/main.js' %}"></script>
+    <script>
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('loginPassword');
+            const icon = document.querySelector('.input-group button i');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.replace('iconly-Curved-Show', 'iconly-Curved-Hide');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.replace('iconly-Curved-Hide', 'iconly-Curved-Show');
+            }
+        }
+
+        // Bootstrap form validation
+        (function () {
+            'use strict';
+            const form = document.getElementById('loginForm');
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        })();
+    </script>
+</body>
+</html>

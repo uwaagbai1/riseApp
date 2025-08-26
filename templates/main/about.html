@@ -1,0 +1,157 @@
+{% extends 'main/base_generic.html' %}
+{% block title %} Who we Are {% endblock title %}
+{% load static %}
+{% block content %} 
+
+    <div class="page-banner-area text-center position-relative z-1 pt-60 pb-60" style="background-color: #131313;">
+        <div class="container">
+            <h1 class="mb-0 text-white text-uppercase" data-cue="slideInUp">
+                About
+            </h1>
+        </div>
+    </div>
+
+    <div class="pb-120 border-bottom"></div>
+
+    <div class="about-us-area bg-131313 position-relative z-1 ptb-120">
+        <div class="container">
+            <div class="row align-items-center" data-cues="slideInUp" data-group="aboutUsContent">
+                <div class="col-lg-6 col-md-12">
+                    <div class="about-us-image text-center">
+                        {% if about.about_image_1 %}
+                            <img src="{{ about.about_image_1.url }}" alt="about-image">
+                        {% else %}
+                            <img src="{% static 'main/images/about-us/about1.jpg' %}" alt="about-image">
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-12">
+                    <div class="about-us-content">
+                        <div class="video-box position-relative">
+                            {% if about.about_image_2 %}
+                                <img src="{{ about.about_image_2.url }}" alt="about-image">
+                            {% else %}
+                                <img src="{% static 'main/images/about-us/about2.jpg' %}" alt="about-image">
+                            {% endif %}
+                            <div class="content">
+                                <div>
+                                    <span class="d-block fw-medium">
+                                        Play Video
+                                    </span>
+                                    <p>
+                                        The Rehoboth Story
+                                    </p>
+                                </div>
+                                {% if about.about_image_2 %}
+                                <a href="{{ about.video_link }}" class="video-btn popup-youtube rounded-circle d-flex align-items-center justify-content-center">
+                                    <img src="{% static 'main/images/icons/play2.svg' %}" alt="play">
+                                </a>
+                                {% else %}
+                                <a href="https://www.youtube.com/watch?v=vn9B2hH4G_E" class="video-btn popup-youtube rounded-circle d-flex align-items-center justify-content-center">
+                                    <img src="{% static 'main/images/icons/play2.svg' %}" alt="play">
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <h2 class="fw-semibold text-uppercase">
+                            Delving into Our Linguistic Odysse
+                        </h2>
+                        <p>
+                            We are dedicated to fostering a vibrant community of language learners committed to linguistic proficiency and cultural appreciation. Established in 2002.
+                        </p>
+                        <p>
+                            Our journey began with a vision to provide an immersive and comprehensive language education experience guided by.
+                        </p>
+                        <a href="#" target="_blank" class="default-btn">
+                            Enroll Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-down-text text-uppercase d-flex align-items-center">
+            <div>
+                <img src="{% static 'main/images/icons/bx-mouse.svg' %}" alt="bx-mouse">
+                Scroll Down
+            </div>
+        </div>
+    </div>
+
+    <div class="team-area border-top pt-120 pb-95">
+        <div class="container">
+            <div class="section-title text-center">
+                <h2 class="fw-semibold mx-auto mb-0 text-uppercase">
+                    Meet Our Directors
+                </h2>
+            </div>
+            <div class="row align-items-center" data-cues="slideInUp" data-group="aboutUsContent">
+                <div class="col-lg-6 col-md-12">
+                    <div class="about-us-content">
+                    
+                        <h2 class="fw-semibold text-uppercase">
+                            Welcome Message
+                        </h2>
+                        <p><i>	&#xFF02; Delving into the RISE Landscape</i></p>
+                        <p>
+                            We are dedicated to fostering a vibrant community of language learners committed to linguistic proficiency and cultural appreciation. Established in 2002.
+                        </p>
+                        <p>
+                            Our journey began with a vision to provide an immersive and comprehensive language education experience guided by.
+                        </p>
+                        <p>
+                            We are dedicated to fostering a vibrant community of language learners committed to linguistic proficiency and cultural appreciation. Established in 2002.
+                        </p>
+                        <p>
+                            Our journey began with a vision to provide an immersive and comprehensive language education experience guided by.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-12">
+                    <div class="about-us-image text-center">
+                        {% if about.directors_image %}
+                            <img src="{{ about.directors_image.url }}" alt="directors-image" height="200px">
+                        {% else %}
+                            <img src="{% static 'main/images/directors.jpeg' %}" alt="directors-image" height="200px">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="team-area border-top pt-120 pb-95">
+        <div class="container">
+            <div class="section-title mb-40 text-center">
+                <h2 class="fw-semibold fs-32 mx-auto mb-0 text-uppercase">
+                    Our Amazing Management Staff
+                </h2>
+            </div>
+            <div class="row justify-content-center" data-cues="slideInUp" data-group="teamContent">
+                {% for staff_member in staff %}
+                    <div class="col-lg-4 col-sm-6" data-cue="slideInUp" data-group="teamContent" data-show="true" style="animation-name: slideInUp; animation-duration: 600ms; animation-timing-function: ease; animation-delay: {{ staff_member.delay }}ms; animation-direction: normal; animation-fill-mode: both;">
+                        <div class="team-box position-relative mb-25">
+                            {% if staff_member.image %}
+                                <img src="{{ staff_member.image.url }}" alt="{{ staff_member.name }}-image">
+                            {% else %}
+                                <img src="{% static 'main/images/teams/team17.jpg' %}" alt="team-image">
+                            {% endif %}
+                            <div class="content d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h3 class="fw-semibold">
+                                        {{ staff_member.name }}
+                                    </h3>
+                                    <span class="d-block">
+                                        {{ staff_member.position }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>No staff members available.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}

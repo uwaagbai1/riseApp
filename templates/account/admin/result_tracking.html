@@ -1,0 +1,191 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <div class="row">
+                    <div class="col-12">
+                        <h1 class="mb-0 hp-text-color-black-0">Result Tracking</h1>
+                        <h4 class="mt-8 hp-text-color-black-0">Monitor Teacher Result Uploads and Top Performers</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24">
+                <form method="GET" class="row g-16">
+                    <div class="col-md-3 col-12">
+                        <label for="sessionFilter" class="form-label">Session</label>
+                        <select name="session" id="sessionFilter" class="form-select">
+                            {% for session in sessions %}
+                            <option value="{{ session.id }}" {% if session.id == selected_session.id %}selected{% endif %}>
+                                {{ session.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 col-12">
+                        <label for="termFilter" class="form-label">Term</label>
+                        <select name="term" id="termFilter" class="form-select">
+                            {% for term_value, term_display in terms %}
+                            <option value="{{ term_value }}" {% if term_value == selected_term %}selected{% endif %}>
+                                {{ term_display }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 col-12">
+                        <label for="classFilter" class="form-label">Class</label>
+                        <select name="class_filter" id="classFilter" class="form-select">
+                            <option value="">All Classes</option>
+                            {% for class in classes %}
+                            <option value="{{ class }}" {% if class == class_filter %}selected{% endif %}>
+                                {{ class }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 col-12">
+                        <label for="sectionFilter" class="form-label">Section</label>
+                        <select name="section_filter" id="sectionFilter" class="form-select">
+                            <option value="">All Sections</option>
+                            {% for section in sections %}
+                            <option value="{{ section }}" {% if section == section_filter %}selected{% endif %}>
+                                {{ section }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 mt-16">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" role="alert">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24 shadow-sm">
+                <h5 class="mb-16">Result Upload Statistics</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Class Section</th>
+                                <th>Students</th>
+                                <th>Complete Results</th>
+                                <th>Upload Progress</th>
+                                <th>Assigned Teachers</th>
+                                <th>Top 3 Students</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stat in result_stats %}
+                            <tr>
+                                <td>{{ stat.section }}</td>
+                                <td>{{ stat.student_count }}</td>
+                                <td>{{ stat.complete_students }} / {{ stat.student_count }}</td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-primary" role="progressbar" 
+                                             style="width: {{ stat.upload_percentage }}%" 
+                                             aria-valuenow="{{ stat.upload_percentage }}" 
+                                             aria-valuemin="0" aria-valuemax="100">
+                                            {{ stat.upload_percentage }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% for teacher in stat.teachers %}
+                                    {{ teacher.full_name }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                    No teachers assigned
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for top_student in stat.top_students %}
+                                    {{ top_student.student.full_name }} ({{ top_student.avg_score|floatformat:2 }}%)
+                                    {% if not forloop.last %}<br>{% endif %}
+                                    {% empty %}
+                                    No results available
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'view_class_results' stat.section.id selected_session.id selected_term %}" 
+                                       class="btn btn-sm btn-primary">View Class</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center">No data available for the selected filters.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_previous or page_obj.has_next %}
+                <div class="mt-16">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1&session={{ selected_session.id }}&term={{ selected_term }}&class_filter={{ class_filter|urlencode }}&section_filter={{ section_filter|urlencode }}" aria-label="First">
+                                    <span aria-hidden="true">««</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}&session={{ selected_session.id }}&term={{ selected_term }}&class_filter={{ class_filter|urlencode }}&section_filter={{ section_filter|urlencode }}" aria-label="Previous">
+                                    <span aria-hidden="true">«</span>
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}&session={{ selected_session.id }}&term={{ selected_term }}&class_filter={{ class_filter|urlencode }}&section_filter={{ section_filter|urlencode }}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}&session={{ selected_session.id }}&term={{ selected_term }}&class_filter={{ class_filter|urlencode }}&section_filter={{ section_filter|urlencode }}" aria-label="Next">
+                                    <span aria-hidden="true">»</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&session={{ selected_session.id }}&term={{ selected_term }}&class_filter={{ class_filter|urlencode }}&section_filter={{ section_filter|urlencode }}" aria-label="Last">
+                                    <span aria-hidden="true">»»</span>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .fee-highlight { font-weight: bold; }
+    .paid-highlight { font-weight: bold; color: #2e7d32; }
+    .outstanding-highlight { font-weight: bold; color: #d32f2f; }
+    .card-stats { border-radius: 12px; padding: 16px; text-align: center; }
+    .table th, .table td { vertical-align: middle; }
+    .table th { font-size: 1rem; }
+    .table td { font-size: 0.95rem; }
+</style>
+
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0px; right: 0px;">
+                    <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                    <defs>
+                        <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fff"></stop>
+                            <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="row">
+                    <div class="col-sm-6 col-12">
+                        <div class="row">
+                            <div class="col-12">
+                                <h1 class="mb-0 hp-text-color-black-0">
+                                    Payment History for {{ parent.full_name|default:parent.phone_number }}
+                                </h1>
+                                <h4 class="mt-8 hp-text-color-black-0">
+                                    Manage your family's school fees by session and term
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-success{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Active Sessions -->
+            <h3 class="mb-24 hp-text-color-black-2">Active Sessions</h3>
+            {% if active_payment_data %}
+                <div class="row g-32">
+                    {% for data in active_payment_data %}
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card hp-bg-color-dark-90 p-24 {% if data.is_current %}border border-primary{% endif %}">
+                                <h4 class="mb-16">
+                                    <i class="bi bi-calendar-check me-2"></i>
+                                    {{ data.session.name }} - {{ data.term_name }}
+                                    {% if data.is_current %}
+                                        <span class="badge bg-primary ms-2">Current</span>
+                                    {% endif %}
+                                </h4>
+                                <p class="hp-p1-body mb-8 fee-highlight">
+                                    <i class="bi bi-wallet2 me-2"></i>
+                                    Total Fees: {{ data.total_fees|floatformat:2 }} XOF
+                                </p>
+                                <p class="hp-p1-body mb-8">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    Status: {{ data.payment_status }}
+                                </p>
+                                <p class="hp-p1-body mb-8 paid-highlight">
+                                    <i class="bi bi-currency-exchange me-2"></i>
+                                    Paid: {{ data.amount_paid|floatformat:2 }} XOF
+                                </p>
+                                <p class="hp-p1-body mb-12 outstanding-highlight">
+                                    <i class="bi bi-exclamation-circle me-2"></i>
+                                    Due: {{ data.amount_due|floatformat:2 }} XOF
+                                </p>
+                                <!-- Progress Bar -->
+                                {% if data.total_fees > 0 %}
+                                    <div class="progress mb-12" style="height: 8px;" role="progressbar" aria-label="Payment progress for {{ data.session.name }} Term {{ data.term_name }}" aria-valuenow="{% widthratio data.amount_paid data.total_fees 100 %}" aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar bg-success" style="width: {% widthratio data.amount_paid data.total_fees 100 %}%;"></div>
+                                    </div>
+                                {% else %}
+                                    <div class="progress mb-12" style="height: 8px;" role="progressbar" aria-label="Payment progress for {{ data.session.name }} Term {{ data.term_name }}" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar bg-success" style="width: 0%;"></div>
+                                    </div>
+                                {% endif %}
+                                <a href="{% url 'parent_payment_detail' session_id=data.session.pk term=data.term %}" class="btn btn-dark mt-16">
+                                    <i class="bi bi-eye me-2"></i>
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card hp-bg-color-dark-90 p-24">
+                    <p class="hp-p1-body">No active sessions found. Please contact the school administration.</p>
+                </div>
+            {% endif %}
+
+            <!-- Past Sessions -->
+            {% if past_payment_data %}
+                <h3 class="mt-32 mb-24 hp-text-color-black-2">Payment History</h3>
+                <div class="card hp-bg-color-dark-90 p-24">
+                    <div class="accordion" id="pastSessionsAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#pastSessionsCollapse" aria-expanded="false" aria-controls="pastSessionsCollapse">
+                                    <i class="bi bi-archive me-2"></i>
+                                    View Payment History
+                                </button>
+                            </h2>
+                            <div id="pastSessionsCollapse" class="accordion-collapse collapse" aria-labelledby="pastSessionsHeading" data-bs-parent="#pastSessionsAccordion">
+                                <div class="accordion-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th><i class="bi bi-calendar-event me-1"></i> Session</th>
+                                                    <th><i class="bi bi-list-ol me-1"></i> Term</th>
+                                                    <th><i class="bi bi-wallet2 me-1"></i> Total Fees (XOF)</th>
+                                                    <th><i class="bi bi-check-circle me-1"></i> Payment Status</th>
+                                                    <th><i class="bi bi-currency-exchange me-1"></i> Amount Paid (XOF)</th>
+                                                    <th><i class="bi bi-exclamation-circle me-1"></i> Amount Due (XOF)</th>
+                                                    <th><i class="bi bi-eye me-1"></i> Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for data in past_payment_data %}
+                                                    <tr>
+                                                        <td>{{ data.session.name }}</td>
+                                                        <td>{{ data.term_name }}</td>
+                                                        <td class="fee-highlight">{{ data.total_fees|floatformat:2 }}</td>
+                                                        <td>{{ data.payment_status }}</td>
+                                                        <td class="paid-highlight">{{ data.amount_paid|floatformat:2 }}</td>
+                                                        <td class="outstanding-highlight">{{ data.amount_due|floatformat:2 }}</td>
+                                                        <td>
+                                                            <a href="{% url 'parent_payment_detail' session_id=data.session.pk term=data.term %}" class="btn btn-dark btn-sm">
+                                                                <i class="bi bi-eye me-1"></i>
+                                                                View Details
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <a href="{% url 'dashboard' %}" class="btn btn-dark mt-32">
+                <i class="bi bi-arrow-left me-2"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

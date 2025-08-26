@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zxx">
+    <head>
+        {% load static %}
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="{% static 'main/css/bootstrap.min.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/magnific-popup.min.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/owl.carousel.min.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/owl.theme.default.min.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/meanmenu.min.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/scrollCue.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/all.min.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/style.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/responsive.css' %}">
+
+        <title>RISE :: {% block title %} {% endblock title %} </title>
+
+        <link rel="icon" type="image/png" href="{% static 'main/images/favicon.svg' %}">
+    </head>
+    <body class="bg-1c1c1c">
+        <div class="loader"></div>
+        <div class="navbar-area white-navbar position-fixed top-0 start-0 end-0">
+            <div class="lanklub-responsive-nav">
+                <div class="container">
+                    <div class="lanklub-responsive-menu">
+                        <div class="logo">
+                            <a href="{% url 'index' %}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="111" height="60" fill="none">
+                                    <style>
+                                        @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@700&display=swap');
+                                        .rise-text {
+                                        font-family: 'Ubuntu', sans-serif;
+                                        font-weight: 700;
+                                        font-size: 22px;
+                                        fill: #FBFBFB;
+                                        }
+                                    </style>
+                                    <g clip-path="url(#a)">
+                                        <g clip-path="url(#h)">
+                                        <g fill="#FBFBFB" clip-path="url(#i)">
+                                            <path d="m64.888 19.9-3.117 1.726a13 13 0 0 1-6.279 1.623c-2.19 0-4.36-.562-6.278-1.623l-3.822-2.117c.048 1.774-.027 3.659-.75 5.163-.2.41-.599.782-.591 1.276.009.684.787.8 1.348.696 0 0 3.304-.634 7.876 3.847.454.445.902.864 1.517 1.082 1.204.427 2.1-.31 2.927-1.09.563-.53 1.19-.99 1.822-1.436 1.515-1.07 3.437-2.416 5.367-2.449 0 0 2.489.543 1.04-1.765 0 0-.663-2.138-1.06-4.933ZM40.284 18.18l-.724 4.344v5.794h2.896v-5.794l-.724-4.345V14.17l-1.448-.802v4.811Z"/>
+                                            <path d="m74.395 9.104-14.026-7.77a10.054 10.054 0 0 0-9.75 0L36.59 9.105c-.869.481-.869 1.736 0 2.218l3.693 2.045v-3.154h16.657v1.448H41.732v2.509l8.886 4.922a10.059 10.059 0 0 0 9.75 0l14.026-7.77a1.27 1.27 0 0 0 0-2.218Z"/>
+                                        </g>
+                                        </g>
+                                        <path fill="#FBFBFB" d="M110.872 29.355H77.287v2.063h33.585v-2.063ZM33.7 29.355H.115v2.063H33.7v-2.063ZM110.872 25.227H77.287v2.064h33.585v-2.064ZM33.7 25.227H.115v2.064H33.7v-2.064Z"/>
+                                        <text x="35" y="55" class="rise-text">RISE</text>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="a"><path fill="#fff" d="M.007.066H110.98v59.926H.007z"/></clipPath>
+                                        <clipPath id="h"><path fill="#fff" d="M33.7.074h43.587v31.624H33.7z"/></clipPath>
+                                        <clipPath id="i"><path fill="#fff" d="M35.94.074h39.108v31.624H35.94z"/></clipPath>
+                                    </defs>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="lanklub-nav">
+                <div class="container">
+                    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                        <a class="navbar-brand" href="{% url 'index' %}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="111" height="60" fill="none">
+                                <style>
+                                    @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@700&display=swap');
+                                    .rise-text {
+                                    font-family: 'Ubuntu', sans-serif;
+                                    font-weight: 700;
+                                    font-size: 22px;
+                                    fill: #FBFBFB;
+                                    }
+                                </style>
+                                <g clip-path="url(#a)">
+                                    <g clip-path="url(#h)">
+                                    <g fill="#FBFBFB" clip-path="url(#i)">
+                                        <path d="m64.888 19.9-3.117 1.726a13 13 0 0 1-6.279 1.623c-2.19 0-4.36-.562-6.278-1.623l-3.822-2.117c.048 1.774-.027 3.659-.75 5.163-.2.41-.599.782-.591 1.276.009.684.787.8 1.348.696 0 0 3.304-.634 7.876 3.847.454.445.902.864 1.517 1.082 1.204.427 2.1-.31 2.927-1.09.563-.53 1.19-.99 1.822-1.436 1.515-1.07 3.437-2.416 5.367-2.449 0 0 2.489.543 1.04-1.765 0 0-.663-2.138-1.06-4.933ZM40.284 18.18l-.724 4.344v5.794h2.896v-5.794l-.724-4.345V14.17l-1.448-.802v4.811Z"/>
+                                        <path d="m74.395 9.104-14.026-7.77a10.054 10.054 0 0 0-9.75 0L36.59 9.105c-.869.481-.869 1.736 0 2.218l3.693 2.045v-3.154h16.657v1.448H41.732v2.509l8.886 4.922a10.059 10.059 0 0 0 9.75 0l14.026-7.77a1.27 1.27 0 0 0 0-2.218Z"/>
+                                    </g>
+                                    </g>
+                                    <path fill="#FBFBFB" d="M110.872 29.355H77.287v2.063h33.585v-2.063ZM33.7 29.355H.115v2.063H33.7v-2.063ZM110.872 25.227H77.287v2.064h33.585v-2.064ZM33.7 25.227H.115v2.064H33.7v-2.064Z"/>
+                                    <text x="35" y="55" class="rise-text">RISE</text>
+                                </g>
+                                <defs>
+                                    <clipPath id="a"><path fill="#fff" d="M.007.066H110.98v59.926H.007z"/></clipPath>
+                                    <clipPath id="h"><path fill="#fff" d="M33.7.074h43.587v31.624H33.7z"/></clipPath>
+                                    <clipPath id="i"><path fill="#fff" d="M35.94.074h39.108v31.624H35.94z"/></clipPath>
+                                </defs>
+                            </svg>
+                        </a>
+                        <div class="collapse navbar-collapse mean-menu">
+                            <ul class="navbar-nav mx-auto">
+                                <li class="nav-item">
+                                    <a href="{% url 'about_us' %}" class="nav-link">
+                                        About
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="javascript:void(0);" class="dropdown-toggle nav-link">
+                                        Academic Programs
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li class="nav-item">
+                                            <a href="{% url 'creche_info' %}" class="nav-link">
+                                                Crèche
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{% url 'nurseryandprimary_info' %}" class="nav-link">
+                                                Nursery / Primary
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{% url 'juniorsec_info' %}" class="nav-link">
+                                                Junior Secondary School
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{% url 'seniorsec_info' %}" class="nav-link">
+                                                Senior Secondary School
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'contact_us' %}" class="nav-link">
+                                        Contact
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'news_list' %}" class="nav-link">
+                                        News
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'gallery' %}" class="nav-link">
+                                        Gallery
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="others-option">
+                                <a href="{% url 'login' %}" class="default-btn" target="_blank">
+                                    School Portal
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        {% block content %} {% endblock content %}
+
+        <footer class="footer-area bg-282828">
+            <div class="container">
+                <div class="row" data-cues="fadeIn" data-group="footerContent">
+                    <div class="col-lg-4 col-md-12">
+                        <h2 class="mb-0 footer-title text-uppercase fw-semibold">
+                            Let’s Learn Together
+                        </h2>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="footer-socials text-center">
+                            <a href="#" target="_blank" class="d-block w-100 text-uppercase">
+                                FACEBOOK
+                            </a>
+                            <a href="#" target="_blank" class="d-block w-100 text-uppercase">
+                                TWITTER
+                            </a>
+                            <a href="#" target="_blank" class="d-block w-100 text-uppercase">
+                                LINKEDIN
+                            </a>
+                            <a href="#" target="_blank" class="d-block w-100 text-uppercase">
+                                INSTAGRAM
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="footer-widget">
+                            <p>
+                                RISE – Shaping future leaders with knowledge, character, and innovation. 
+                            </p>
+                            <a href="contact.html" class="default-btn">
+                                Let’s Talk
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom-area">
+                    <div class="row align-items-center">
+                        <div class="col-lg-5 col-md-12">
+                            <ul class="custom-links p-0 mb-0 list-unstyled">
+                                <li class="d-inline-block">
+                                    <a href="about.html">
+                                        Facilities and School Life
+                                    </a>
+                                </li>
+                                <li class="d-inline-block">
+                                    <a href="courses.html">
+                                        School Calendar
+                                    </a>
+                                </li>
+                                <li class="d-inline-block">
+                                    <a href="contact.html">
+                                        FAQ
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-2 col-md-12 text-lg-center">
+                            <a href="{% url 'index' %}" class="logo d-inline-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="111" height="60" fill="none">
+                                    <style>
+                                        @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@700&display=swap');
+                                        .rise-text {
+                                        font-family: 'Ubuntu', sans-serif;
+                                        font-weight: 700;
+                                        font-size: 22px;
+                                        fill: #FBFBFB;
+                                        }
+                                    </style>
+                                    <g clip-path="url(#a)">
+                                        <!-- Geometric Shapes (unchanged from original) -->
+                                        <g clip-path="url(#h)">
+                                        <g fill="#FBFBFB" clip-path="url(#i)">
+                                            <path d="m64.888 19.9-3.117 1.726a13 13 0 0 1-6.279 1.623c-2.19 0-4.36-.562-6.278-1.623l-3.822-2.117c.048 1.774-.027 3.659-.75 5.163-.2.41-.599.782-.591 1.276.009.684.787.8 1.348.696 0 0 3.304-.634 7.876 3.847.454.445.902.864 1.517 1.082 1.204.427 2.1-.31 2.927-1.09.563-.53 1.19-.99 1.822-1.436 1.515-1.07 3.437-2.416 5.367-2.449 0 0 2.489.543 1.04-1.765 0 0-.663-2.138-1.06-4.933ZM40.284 18.18l-.724 4.344v5.794h2.896v-5.794l-.724-4.345V14.17l-1.448-.802v4.811Z"/>
+                                            <path d="m74.395 9.104-14.026-7.77a10.054 10.054 0 0 0-9.75 0L36.59 9.105c-.869.481-.869 1.736 0 2.218l3.693 2.045v-3.154h16.657v1.448H41.732v2.509l8.886 4.922a10.059 10.059 0 0 0 9.75 0l14.026-7.77a1.27 1.27 0 0 0 0-2.218Z"/>
+                                        </g>
+                                        </g>
+                                        <!-- Horizontal Bars (unchanged from original) -->
+                                        <path fill="#FBFBFB" d="M110.872 29.355H77.287v2.063h33.585v-2.063ZM33.7 29.355H.115v2.063H33.7v-2.063ZM110.872 25.227H77.287v2.064h33.585v-2.064ZM33.7 25.227H.115v2.064H33.7v-2.064Z"/>
+                                        <!-- New Text: RISE with Ubuntu font -->
+                                        <text x="35" y="55" class="rise-text">RISE</text>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="a"><path fill="#fff" d="M.007.066H110.98v59.926H.007z"/></clipPath>
+                                        <clipPath id="h"><path fill="#fff" d="M33.7.074h43.587v31.624H33.7z"/></clipPath>
+                                        <clipPath id="i"><path fill="#fff" d="M35.94.074h39.108v31.624H35.94z"/></clipPath>
+                                    </defs>
+                                </svg>
+                            </a>
+                        </div>
+                        <div class="col-lg-5 col-md-12 text-lg-end">
+                            <ul class="custom-links p-0 mb-0 list-unstyled">
+                                <li class="d-inline-block">
+                                    <a href="#">
+                                        Parent Resources
+                                    </a>
+                                </li>
+                                <li class="d-inline-block">
+                                    <a href="privacy-policy.html">
+                                        Careers
+                                    </a>
+                                </li>
+                                <li class="d-inline-block">
+                                    <a href="terms-conditions.html">
+                                        Privacy Policy
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="copyright text-center">
+                    <p>
+                        Copyright, RISE All Rights Reserved
+                    </p>
+                </div>
+            </div>
+        </footer>
+        
+        <div class="go-top bg-white text-center rounded-circle position-fixed">
+            <i class="fa-solid fa-chevron-up"></i>
+        </div>
+
+        <script src="{% static 'main/js/jquery.min.js' %}"></script>
+        <script src="{% static 'main/js/bootstrap.bundle.min.js' %}"></script>
+        <script src="{% static 'main/js/magnific-popup.min.js' %}"></script>
+        <script src="{% static 'main/js/meanmenu.min.js' %}"></script>
+        <script src="{% static 'main/js/owl.carousel.min.js' %}"></script>
+        <script src="{% static 'main/js/scrollCue.min.js' %}"></script>
+        <script src="{% static 'main/js/custom.js' %}"></script>
+        <link rel="stylesheet" href="{% static 'main/css/requirements.css' %}">
+
+    <script src="{% static 'main/js/requirements.js' %}"></script>
+    <script>
+        window.addEventListener("load", function () {
+            const loader = document.querySelector(".loader");
+            if (loader) {
+            setTimeout(() => {
+                loader.style.display = "none";
+            }, 500);
+            }
+        });
+    </script>
+    </body>
+</html>

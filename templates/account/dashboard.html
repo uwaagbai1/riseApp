@@ -1,0 +1,235 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+{% block content %}
+    <div class="hp-main-layout-content">
+        <div class="row mb-32 gy-32">
+            <div class="col-12">
+                <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                    <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0px; right: 0px;">
+                        <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                        <defs>
+                            <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#fff"></stop>
+                                <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="row">
+                        <div class="col-sm-6 col-12">
+                            <div class="row">
+                                <div class="col-12">
+                                    <h1 class="mb-0 hp-text-color-black-0">
+                                        Welcome, 
+                                        {% if role == 'student' %}{{ user.student.full_name }}
+                                        {% elif role == 'teacher' %}{{ user.teacher.full_name }}
+                                        {% elif role == 'parent' %}{{ parent.full_name|default:parent.phone_number }}
+                                        {% else %}
+                                            {% with user_groups=user.groups.all %}
+                                                {% for group in user_groups %}
+                                                    {% if group.name == 'Secretary' %}Secretary
+                                                    {% elif group.name == 'Principal' %}Principal
+                                                    {% elif group.name == 'Director' %}Director
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {% if user_groups|length == 0 %}Admin{% endif %}
+                                            {% endwith %}
+                                        {% endif %}!
+                                    </h1>
+
+                                    <h4 class="mt-8 hp-text-color-black-0">
+                                        {% if role == 'student' %}Your Student Dashboard
+                                        {% elif role == 'teacher' %}Your Teacher Dashboard
+                                        {% elif role == 'parent' %}Your Parent Dashboard
+                                        {% else %}
+                                            {% with user_groups=user.groups.all %}
+                                                {% for group in user_groups %}
+                                                    {% if group.name == 'Secretary' %}Secretary Dashboard
+                                                    {% elif group.name == 'Principal' %}Principal Dashboard
+                                                    {% elif group.name == 'Director' %}Director Dashboard
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {% if user_groups|length == 0 %}Admin Dashboard{% endif %}
+                                            {% endwith %}
+                                        {% endif %}
+                                    </h4>
+                                    {% if role == 'parent' %}
+                                        <p class="hp-p1-body mt-8">You have {{ children_count }} registered child{% if children_count != 1 %}ren{% endif %}.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="row g-32">
+                    {% if role == 'student' %}
+                    <div class="col-12 col-md-6">
+                        <div class="card hp-bg-color-dark-90 p-24">
+                            <h3>Recent Grades</h3>
+                            <p class="hp-p1-body">Check your latest academic performance.</p>
+                            <a href="{% url 'student_grades' %}" class="btn btn-dark mt-16">View Grades</a>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="card hp-bg-color-dark-90 p-24">
+                            <h3>View Assigned Subjects</h3>
+                            <p class="hp-p1-body">View your assigned subjects for the current term.</p>
+                            <a href="{% url 'student_view_subjects' %}" class="btn btn-dark mt-16">View Subjects</a>
+                        </div>
+                    </div>
+                    {% elif role == 'teacher' %}
+                    <div class="col-12 col-md-6">
+                        <div class="card hp-bg-color-dark-90 p-24">
+                            <h3>Assigned Classes</h3>
+                            <p class="hp-p1-body">Manage students / Enter results in your classes.</p>
+                            <a href="{% url 'teacher_view_students' %}" class="btn btn-dark mt-16">View Classes</a>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="card hp-bg-color-dark-90 p-24">
+                            <h3>Manage Subjects</h3>
+                            <p class="hp-p1-body">Assign or remove subjects for classes and students.</p>
+                            <a href="{% url 'teacher_manage_subjects' %}" class="btn btn-dark mt-16">Manage Subjects</a>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="card hp-bg-color-dark-90 p-24">
+                            <h3>View Class Results</h3>
+                            <p class="hp-p1-body">View complete class results for your sections.</p>
+                            <a href="{% url 'teacher_view_class_results' %}" class="btn btn-dark mt-16">View Results</a>
+                        </div>
+                    </div>
+                    {% elif role == 'parent' %}
+                    <div class="col-12 col-md-6">
+                        <div class="card hp-bg-color-dark-90 p-24">
+                            <h3>View Children</h3>
+                            <p class="hp-p1-body">View your children's academic records.</p>
+                            <a href="{% url 'parent_view_children' %}" class="btn btn-dark mt-16">View Children</a>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="card hp-bg-color-dark-90 p-24">
+                            <h3>Payments</h3>
+                            <p class="hp-p1-body">View school fees for your family.</p>
+                            <a href="{% url 'parent_payments' %}" class="btn btn-dark mt-16">View Payments</a>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="card hp-bg-color-dark-90 p-24">
+                            <h3>Profile</h3>
+                            <p class="hp-p1-body">Update your profile and change password.</p>
+                            <a href="{% url 'profile' %}" class="btn btn-dark mt-16">Manage Profile</a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Admin Role Cards -->
+                    {% with user_groups=user.groups.all %}
+                        {% for group in user_groups %}
+                            {% if group.name == 'Secretary' or group.name == 'Director' %}
+                                <div class="col-12 col-md-6">
+                                    <div class="card hp-bg-color-dark-90 p-24">
+                                        <h3>Fee Payments</h3>
+                                        <p class="hp-p1-body">Record payments for a family</p>
+                                        <a href="{% url 'admin_create_payment' %}" class="btn btn-dark mt-16">Make Payment</a>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="card hp-bg-color-dark-90 p-24">
+                                        <h3>Payment Reports</h3>
+                                        <p class="hp-p1-body">View all fee transactions.</p>
+                                        <a href="{% url 'admin_payment_report' %}" class="btn btn-dark mt-16">View Reports</a>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="card hp-bg-color-dark-90 p-24">
+                                        <h3>Daily Payment Report</h3>
+                                        <p class="hp-p1-body">View all fee transactions daily.</p>
+                                        <a href="{% url 'admin_daily_payment_report' %}" class="btn btn-dark mt-16">View Daily Report</a>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="card hp-bg-color-dark-90 p-24">
+                                        <h3>Fee Statistics</h3>
+                                        <p class="hp-p1-body">View fee payment statistics by section.</p>
+                                        <a href="{% url 'admin_fee_statistics' %}" class="btn btn-dark mt-16">View Fee Statistics</a>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="card hp-bg-color-dark-90 p-24">
+                                        <h3>Manage Students</h3>
+                                        <p class="hp-p1-body">Register and manage student records.</p>
+                                        <a href="{% url 'admin_student_management' %}" class="btn btn-dark mt-16">Manage Students</a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% if group.name == 'Principal' or group.name == 'Director' %}
+                                <div class="col-12 col-md-6">
+                                    <div class="card hp-bg-color-dark-90 p-24">
+                                        <h3>Manage Teachers</h3>
+                                        <p class="hp-p1-body">Register and manage teacher records.</p>
+                                        <a href="{% url 'admin_teacher_management' %}" class="btn btn-dark mt-16">Manage Teachers</a>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="card hp-bg-color-dark-90 p-24">
+                                        <h3>Result Tracking</h3>
+                                        <p class="hp-p1-body">Monitor teacher result uploads and view top performers.</p>
+                                        <a href="{% url 'admin_result_tracking' %}" class="btn btn-dark mt-16">Track Results</a>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="card hp-bg-color-dark-90 p-24">
+                                        <h3>Manage Result Access Requests</h3>
+                                        <p class="hp-p1-body">Review and approve student requests to view results.</p>
+                                        <a href="{% url 'admin_manage_result_access_requests' %}" class="btn btn-dark mt-16">Manage Requests</a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            {% if group.name == 'Director' %}
+                                <div class="col-12 col-md-6">
+                                    <div class="card hp-bg-color-dark-90 p-24">
+                                        <h3>Manage Class Sections</h3>
+                                        <p class="hp-p1-body">Create and manage class sections for academic sessions.</p>
+                                        <a href="{% url 'admin_manage_sections' %}" class="btn btn-dark mt-16">Manage Sections</a>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="card hp-bg-color-dark-90 p-24">
+                                        <h3>Manage Subjects</h3>
+                                        <p class="hp-p1-body">Create and manage subjects for classes and sections.</p>
+                                        <a href="{% url 'admin_manage_subjects' %}" class="btn btn-dark mt-16">Manage Subjects</a>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="card hp-bg-color-dark-90 p-24">
+                                        <h3>School Statistics</h3>
+                                        <p class="hp-p1-body">View comprehensive statistics about students and teachers.</p>
+                                        <a href="{% url 'admin_statistics' %}" class="btn btn-dark mt-16">View Statistics</a>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="card hp-bg-color-dark-90 p-24">
+                                        <h3>Promote Students</h3>
+                                        <p class="hp-p1-body">Only Active Students (Excluding SSS 3) Gets Promoted</p>
+                                        <a href="{% url 'promote_students' %}" class="btn btn-dark mt-16">Promote Students</a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        {% if user_groups|length == 0 %}
+                            <div class="col-12">
+                                <div class="card hp-bg-color-dark-90 p-24">
+                                    <h3>No Access</h3>
+                                    <p class="hp-p1-body">You do not have permission to access any admin functionalities. Please contact the system administrator.</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                    <!-- End Admin Role Cards -->
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

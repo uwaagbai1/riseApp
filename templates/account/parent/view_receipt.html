@@ -1,0 +1,85 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24" id="receiptContent">
+                <h2>Payment Receipt</h2>
+                <p class="hp-p1-body">Receipt for {{ payment.session.name }} - {{ term_name }}</p>
+
+                <div class="mb-24">
+                    <h4>Payment Details</h4>
+                    <p><strong>Transaction ID:</strong> {{ payment.transaction_id|default:"N/A" }}</p>
+                    <p><strong>Amount Paid:</strong> {{ payment_status.amount_paid }} XOF</p>
+                    <p><strong>Total Fees:</strong> {{ total_fees }} XOF</p>
+                    <p><strong>Amount Due:</strong> {{ payment_status.amount_due }} XOF</p>
+                    <p><strong>Status:</strong> {{ payment_status.status }}</p>
+                    <p><strong>Date:</strong> {{ payment.created_at|date:"d M Y" }}</p>
+                </div>
+
+                <h4>Students Covered</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Class</th>
+                                <th>Fee Amount (XOF)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>{{ student.full_name }}</td>
+                                <td>{{ student.current_class.level|default:"N/A" }}</td>
+                                <td>
+                                    {% with fee=student.current_class.section %}
+                                    {% with fee_section="Creche" if fee == "Nursery" and student.current_class.level == "Creche" else "Nursery_Primary" if fee in "Nursery,Primary" else fee %}
+                                    {% with fee_obj=payment.session.fee_structures.filter(term=payment.term, section=fee_section).first %}
+                                    {{ fee_obj.amount|default:"0.00" }}
+                                    {% endwith %}
+                                    {% endwith %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <button onclick="printReceipt()" class="btn btn-dark mt-16">Print Receipt</button>
+                <a href="{% url 'parent_payments' %}" class="btn btn-outline-dark mt-16 ms-8">Back to Payments</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function printReceipt() {
+    const receiptContent = document.getElementById('receiptContent').innerHTML;
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Payment Receipt</title>
+            <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+            <style>
+                body { padding: 20px; }
+                .card { border: 1px solid #000; padding: 20px; }
+                @media print {
+                    .btn { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="card">${receiptContent}</div>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+}
+</script>
+{% endblock content %}

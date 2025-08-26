@@ -1,0 +1,218 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    @media print {
+        .no-print { display: none !important; }
+        .hp-bg-color-dark-90 { background: none; }
+        .table { font-size: 12px; }
+        .print-header { display: block; text-align: center; margin-bottom: 20px; }
+    }
+</style>
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0; right: 0;">
+                    <path d="M730.404 135.471 369.675-6.641l88.802-441-243.179-98.8 246.364 263.281-329.128-126.441 114.698 166.726-277.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs>
+                        <linearGradient id="a" x1="315.467" y1="6.875" x2="397.657" y2="329.724" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fff"/>
+                            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <h1 class="mb-0 hp-text-color-black-0">Payment Report</h1>
+                <h4 class="mt-8 hp-text-color-black-0">View payment status for all families by session and term</h4>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24" style="border-radius: 16px;">
+                <div class="no-print mb-4">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="session_id" class="form-label hp-p1-body">Session</label>
+                            <select class="form-select bg-dark text-white" id="session_id" name="session_id">
+                                {% for session in sessions %}
+                                    <option value="{{ session.id }}" {% if session == current_session %}selected{% endif %}>{{ session.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="term" class="form-label hp-p1-body">Term</label>
+                            <select class="form-select bg-dark text-white" id="term" name="term">
+                                {% for value, label in term_choices %}
+                                    <option value="{{ value }}" {% if value == current_term %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sort_type" class="form-label hp-p1-body">Sort By</label>
+                            <select class="form-select bg-dark text-white" id="sort_type" name="sort_type">
+                                <option value="all" {% if sort_type == 'all' %}selected{% endif %}>All</option>
+                                <option value="full" {% if sort_type == 'full' %}selected{% endif %}>Fully Paid</option>
+                                <option value="partial" {% if sort_type == 'partial' %}selected{% endif %}>Partially Paid</option>
+                                <option value="none" {% if sort_type == 'none' %}selected{% endif %}>Not Paid</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="print-header" style="display: none;">
+                    <h2>Payment Report - {{ current_session.name }} Term {{ current_term }}</h2>
+                    <p>Generated on {{ 'now'|date:'d M Y' }}</p>
+                </div><br>
+                <div class="table-responsive">
+                    {% if sort_type == 'all' %}
+                        <h4>Full Paid ({{ full_paid_count }})</h4>
+                        <table class="table" style="font-size: 0.95rem;">
+                            <thead>
+                                <tr>
+                                    <th>Students</th>
+                                    <th>Phone</th>
+                                    <th style="text-align: right;">Total Fees (XOF)</th>
+                                    <th style="text-align: right;">Amount Paid (XOF)</th>
+                                    <th style="text-align: right;">Amount Due (XOF)</th>
+                                    <th style="text-align: right;">Paid (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in full_paid %}
+                                    <tr>
+                                        <td>{{ item.students }}</td>
+                                        <td>{{ item.parent_phone }}</td>
+                                        <td style="text-align: right;">{{ item.total_fees|floatformat:2 }}</td>
+                                        <td style="text-align: right;">{{ item.amount_paid|floatformat:2 }}</td>
+                                        <td style="text-align: right;">{{ item.amount_due|floatformat:2 }}</td>
+                                        <td style="text-align: right;">{{ item.percentage_paid|floatformat:2 }}%</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="6" class="text-center">No full paid families</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <h4>Partial Paid ({{ partial_paid_count }})</h4>
+                        <table class="table" style="font-size: 0.95rem;">
+                            <thead>
+                                <tr>
+                                    <th>Students</th>
+                                    <th>Phone</th>
+                                    <th style="text-align: right;">Total Fees (XOF)</th>
+                                    <th style="text-align: right;">Amount Paid (XOF)</th>
+                                    <th style="text-align: right;">Amount Due (XOF)</th>
+                                    <th style="text-align: right;">Paid (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in partial_paid %}
+                                    <tr>
+                                        <td>{{ item.students }}</td>
+                                        <td>{{ item.parent_phone }}</td>
+                                        <td style="text-align: right;">{{ item.total_fees|floatformat:2 }}</td>
+                                        <td style="text-align: right;">{{ item.amount_paid|floatformat:2 }}</td>
+                                        <td style="text-align: right;">{{ item.amount_due|floatformat:2 }}</td>
+                                        <td style="text-align: right;">{{ item.percentage_paid|floatformat:2 }}%</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="6" class="text-center">No partial paid families</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <h4>Not Paid ({{ not_paid_count }})</h4>
+                        <table class="table" style="font-size: 0.95rem;">
+                            <thead>
+                                <tr>
+                                    <th>Students</th>
+                                    <th>Phone</th>
+                                    <th style="text-align: right;">Total Fees (XOF)</th>
+                                    <th style="text-align: right;">Amount Paid (XOF)</th>
+                                    <th style="text-align: right;">Amount Due (XOF)</th>
+                                    <th style="text-align: right;">Paid (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in not_paid %}
+                                    <tr>
+                                        <td>{{ item.students }}</td>
+                                        <td>{{ item.parent_phone }}</td>
+                                        <td style="text-align: right;">{{ item.total_fees|floatformat:2 }}</td>
+                                        <td style="text-align: right;">{{ item.amount_paid|floatformat:2 }}</td>
+                                        <td style="text-align: right;">{{ item.amount_due|floatformat:2 }}</td>
+                                        <td style="text-align: right;">{{ item.percentage_paid|floatformat:2 }}%</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="6" class="text-center">No unpaid families</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <table class="table" style="font-size: 0.95rem;">
+                            <thead>
+                                <tr>
+                                    <th>Students</th>
+                                    <th>Phone</th>
+                                    <th style="text-align: right;">Total Fees (XOF)</th>
+                                    <th style="text-align: right;">Amount Paid (XOF)</th>
+                                    <th style="text-align: right;">Amount Due (XOF)</th>
+                                    <th style="text-align: right;">Paid (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in report_data %}
+                                    <tr>
+                                        <td>{{ item.students }}</td>
+                                        <td>{{ item.parent_phone }}</td>
+                                        <td style="text-align: right;">{{ item.total_fees|floatformat:2 }}</td>
+                                        <td style="text-align: right;">{{ item.amount_paid|floatformat:2 }}</td>
+                                        <td style="text-align: right;">{{ item.amount_due|floatformat:2 }}</td>
+                                        <td style="text-align: right;">{{ item.percentage_paid|floatformat:2 }}%</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr><td colspan="6" class="text-center">No payment data available</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                </div>
+                <div class="no-print mt-4">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link bg-dark text-white" href="?page=1&session_id={{ current_session.id }}&term={{ current_term }}&sort_type={{ sort_type }}">« First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link bg-dark text-white" href="?page={{ page_obj.previous_page_number }}&session_id={{ current_session.id }}&term={{ current_term }}&sort_type={{ sort_type }}">Previous</a>
+                                </li>
+                            {% endif %}
+                            <li class="page-item disabled">
+                                <span class="page-link bg-dark text-white">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link bg-dark text-white" href="?page={{ page_obj.next_page_number }}&session_id={{ current_session.id }}&term={{ current_term }}&sort_type={{ sort_type }}">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link bg-dark text-white" href="?page={{ page_obj.paginator.num_pages }}&session_id={{ current_session.id }}&term={{ current_term }}&sort_type={{ sort_type }}">Last »</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav><br>
+                    <a href="{% url 'admin_payment_report_pdf' %}?session_id={{ current_session.id }}&term={{ current_term }}&sort_type={{ sort_type }}" class="btn btn-primary w-100">Download PDF Report</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Debugging: Log the counts to verify data
+    console.log('Full Paid Count:', {{ full_paid_count }});
+    console.log('Partial Paid Count:', {{ partial_paid_count }});
+    console.log('Not Paid Count:', {{ not_paid_count }});
+</script>
+{% endblock content %}

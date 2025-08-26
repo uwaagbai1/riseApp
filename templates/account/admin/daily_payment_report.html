@@ -1,0 +1,111 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    @media print {
+        .no-print { display: none !important; }
+        .hp-bg-color-dark-90 { background: none; }
+        .table { font-size: 12px; }
+        .print-header { display: block; text-align: center; margin-bottom: 20px; }
+    }
+    .paid-highlight { font-weight: bold; color: #2e7d32; }
+    .due-highlight { font-weight: bold; color: #d32f2f; }
+    .card-stats { border-radius: 12px; padding: 16px; text-align: center; }
+    .table th, .table td { vertical-align: middle; }
+    .table th { font-size: 1rem; }
+    .table td { font-size: 0.95rem; }
+</style>
+
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0px; right: 0px;">
+                    <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                    <defs>
+                        <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fff"></stop>
+                            <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <h1 class="mb-0 hp-text-color-black-0">Daily Payment Report</h1>
+                <h4 class="mt-8 hp-text-color-black-0">Payments for {{ selected_date }} ({{ current_session.name }} Term {{ current_term }})</h4>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24" style="border-radius: 16px;">
+                <div class="no-print mb-4">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="date" class="form-label hp-p1-body">Select Date</label>
+                            <input type="date" class="form-control bg-dark text-white" id="date" name="date" value="{{ selected_date }}">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="print-header" style="display: none;">
+                    <h2>Daily Payment Report - {{ selected_date }}</h2>
+                    <p>Rehoboth International School of Excellence</p>
+                    <p>Generated on {{ 'now'|date:'d M Y' }}</p>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-12">
+                        <div class="card-stats">
+                            <h3 class="paid-highlight">Total Paid Today</h3>
+                            <h3 class="paid-highlight">{{ total_paid|floatformat:2 }} XOF</h3>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Students</th>
+                                <th class="text-end paid-highlight">Amount Paid (XOF)</th>
+                                <th class="text-end due-highlight">Amount Due (XOF)</th>
+                                <th>Transaction ID</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in report_data %}
+                                <tr>
+                                    <td>{{ item.students }}</td>
+                                    <td class="text-end paid-highlight">{{ item.amount_paid|floatformat:2 }}</td>
+                                    <td class="text-end due-highlight">{{ item.amount_due|floatformat:2 }}</td>
+                                    <td>{{ item.transaction_id|slice:":8" }}...</td>
+                                    <td>{{ item.time }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="6" class="text-center">No payments recorded for this date</td></tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2" class="text-end">Total:</td>
+                                <td class="text-end paid-highlight">{{ total_paid|floatformat:2 }}</td>
+                                <td colspan="3"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="no-print mt-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <button class="btn btn-dark w-100" onclick="window.print()">Print Report</button>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'admin_daily_payment_report_pdf' %}?date={{ selected_date }}&session_id={{ current_session.id }}&term={{ current_term }}" class="btn btn-primary w-100">Download PDF Report</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

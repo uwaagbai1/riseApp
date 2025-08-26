@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Daily Payment Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #000; padding: 8px; }
+        th { background-color: #f2f2f2; text-align: left; font-size: 14px; }
+        td { font-size: 12px; }
+        .text-right { text-align: right; }
+        .paid-highlight { font-weight: bold; color: #2e7d32; }
+        .due-highlight { font-weight: bold; color: #d32f2f; }
+        h2, h3 { text-align: center; }
+        .total-card { text-align: center; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Daily Payment Report - {{ selected_date }}</h2>
+    <p style="text-align: center;">Rehoboth International School of Excellence</p>
+    <p style="text-align: center;">{{ current_session.name }} Term {{ current_term }}</p>
+    <p style="text-align: center;">Generated on {{ date_generated|date:'d M Y' }}</p>
+    
+    <div class="total-card">
+        <h3 class="paid-highlight">Total Paid Today</h3>
+        <h3 class="paid-highlight">{{ total_paid|floatformat:2 }} XOF</h3>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Students</th>
+                <th class="text-right paid-highlight">Amount Paid (XOF)</th>
+                <th class="text-right due-highlight">Amount Due (XOF)</th>
+                <th>Transaction ID</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in report_data %}
+                <tr>
+                    <td>{{ item.students }}</td>
+                    <td class="text-right paid-highlight">{{ item.amount_paid|floatformat:2 }}</td>
+                    <td class="text-right due-highlight">{{ item.amount_due|floatformat:2 }}</td>
+                    <td>{{ item.transaction_id|slice:":8" }}...</td>
+                    <td>{{ item.time }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5">No payments recorded for this date</td></tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="1" class="text-right">Total:</td>
+                <td class="text-right paid-highlight">{{ total_paid|floatformat:2 }}</td>
+                <td colspan="3"></td>
+            </tr>
+        </tfoot>
+    </table>
+</body>
+</html>

@@ -1,0 +1,214 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <h1 class="mb-0 hp-text-color-black-0">{{ selected_section.school_class }} Student Assignment</h1>
+                <h4 class="mt-8 hp-text-color-black-0">Manage student assignments for your section</h4>
+            </div>
+        </div>
+        
+        <!-- Section Filter -->
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24">
+                <form method="get" class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <label for="section" class="form-label">Select Your Section</label>
+                        <select class="form-select" id="section" name="section">
+                            {% for section in teacher_sections %}
+                            <option value="{{ section.id }}" {% if selected_section.id == section.id %}selected{% endif %}>
+                                {{ section.school_class }} {{ section.suffix }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">Load Students</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Unassigned Students Table (General) -->
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24">
+                <h4 class="mb-16">Unassigned {{ selected_section.school_class }} Students (General Pool)</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Admission No.</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in unassigned_students %}
+                            <tr>
+                                <td>{{ student.full_name }}</td>
+                                <td>{{ student.admission_number }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-dark assign-student-btn" 
+                                        data-admission-number="{{ student.admission_number }}"
+                                        data-section-id="{{ selected_section.id }}">
+                                        Assign to {{ selected_section.school_class }} {{ selected_section.suffix }}
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">No unassigned students found for {{ selected_section.school_class }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Assigned Students Table -->
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24">
+                <h4 class="mb-16">Your Assigned Students ({{ selected_section.school_class }} {{ selected_section.suffix }})</h4>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Admission No.</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    {% for student in assigned_students %}
+    <tr id="assigned-row-{{ student.admission_number }}">
+        <td>{{ student.full_name }}</td>
+        <td>{{ student.admission_number }}</td>
+        <td>
+            <div class="d-flex gap-3">
+                <a href="{% url 'update_result' student.admission_number %}" class="btn btn-sm btn-dark me-2">Enter Results</a>&nbsp;&nbsp;&nbsp;
+                <a href="{% url 'teacher_manage_subjects' %}?section={{ selected_section.id }}&student={{ student.admission_number }}" class="btn btn-sm btn-transparent me-2">Manage Subjects</a>&nbsp;&nbsp;&nbsp;
+                <a href="{% url 'student_detail' student.admission_number %}" class="btn btn-sm btn-primary me-2">Student Detail</a>&nbsp;&nbsp;&nbsp;
+                <button class="btn btn-sm btn-danger remove-student-btn"
+                    data-admission-number="{{ student.admission_number }}">
+                    Remove from Section
+                </button>
+            </div>
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="3" class="text-center">No students assigned to your section</td>
+    </tr>
+    {% endfor %}
+</tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.assign-student-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const admissionNumber = this.dataset.admissionNumber;
+            const sectionId = this.dataset.sectionId;
+            const btn = this;
+            
+            fetch("{% url 'assign_student_to_section' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `admission_number=${admissionNumber}&section_id=${sectionId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    btn.closest('tr').remove();
+                    
+                    showToast('success', data.message);
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast('error', data.message);
+                }
+            })
+            .catch(error => {
+                showToast('error', 'An error occurred');
+                console.error(error);
+            });
+        });
+    });
+    
+    document.querySelectorAll('.remove-student-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const admissionNumber = this.dataset.admissionNumber;
+            const row = document.getElementById(`assigned-row-${admissionNumber}`);
+            
+            fetch("{% url 'remove_student_from_section' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `admission_number=${admissionNumber}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    row.remove();
+                    
+                    showToast('success', data.message);
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast('error', data.message);
+                }
+            })
+            .catch(error => {
+                showToast('error', 'An error occurred');
+                console.error(error);
+            });
+        });
+    });
+    
+    function showToast(type, message) {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        const toastContainer = document.getElementById('toast-container') || document.body;
+        toastContainer.appendChild(toast);
+        
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        toast.addEventListener('hidden.bs.toast', function() {
+            toast.remove();
+        });
+    }
+});
+</script>
+{% endblock %}

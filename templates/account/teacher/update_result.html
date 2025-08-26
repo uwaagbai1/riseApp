@@ -1,0 +1,181 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0px; right: 0px;">
+                    <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                    <defs>
+                        <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fff"></stop>
+                            <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="row">
+                    <div class="col-12">
+                        <h1 class="mb-0 hp-text-color-black-0">Update Results for {{ student.full_name }}</h1>
+                        <h4 class="mt-8 hp-text-color-black-0">Enter or update results for {{ student.current_section|default:'N/A' }} ({{ selected_session.name }} Term {{ selected_term }})   </h4>
+                        <a href="{% url 'teacher_view_student_past_results' student.admission_number %}" class="btn btn-primary ms-2">View Past Results</a>
+                        {% if not is_editable %}
+                        <div class="alert alert-danger mt-3">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Results cannot be edited after the term has ended (Term ended on {{ term_end_date|date:"F d, Y" }})
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24">
+                {% if messages %}
+                <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+                    {% for message in messages %}
+                    <div class="toast align-items-center text-white {% if message.tags == 'error' %}bg-danger{% else %}bg-dark{% endif %} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                {{ message }}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if subjects %}
+                <form method="POST" id="update_result_form" novalidate>
+                    {% csrf_token %}
+                    <div class="table-responsive">
+                        <table class="table" id="results_table">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    {% if is_nursery %}
+                                        <th>Total Marks (0-100)</th>
+                                    {% elif is_primary %}
+                                        <th>Test (0-20)</th>
+                                        <th>Homework (0-10)</th>
+                                        <th>Classwork (0-10)</th>
+                                        <th>Exam (0-60)</th>
+                                    {% else %}
+                                        <th>CA (0-10)</th>
+                                        <th>Test 1 (0-10)</th>
+                                        <th>Test 2 (0-10)</th>
+                                        <th>Exam (0-70)</th>
+                                    {% endif %}
+                                    <th>Total (100)</th>
+                                    <th>Grade</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in subjects %}
+                                <tr>
+                                    <td>{{ subject.name }}</td>
+                                    {% with result=existing_results|get_item:subject.id %}
+                                    {% if is_nursery %}
+                                    <td>
+                                        <input type="number" class="form-control bg-dark text-white" name="total_marks_{{ subject.id }}"
+                                               value="{% if result.total_marks %}{{ result.total_marks|floatformat:1 }}{% endif %}" min="0" max="100" step="1" {% if not is_editable %}disabled{% endif %}>
+                                        <div class="invalid-feedback">Enter a score between 0 and 100.</div>
+                                    </td>
+                                    {% elif is_primary %}
+                                    <td>
+                                        <input type="number" class="form-control bg-dark text-white" name="test_{{ subject.id }}"
+                                               value="{% if result.test %}{{ result.test|floatformat:1 }}{% endif %}" min="0" max="20" step="1" {% if not is_editable %}disabled{% endif %}>
+                                        <div class="invalid-feedback">Enter a score between 0 and 20.</div>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control bg-dark text-white" name="homework_{{ subject.id }}"
+                                               value="{% if result.homework %}{{ result.homework|floatformat:1 }}{% endif %}" min="0" max="10" step="1" {% if not is_editable %}disabled{% endif %}>
+                                        <div class="invalid-feedback">Enter a score between 0 and 10.</div>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control bg-dark text-white" name="classwork_{{ subject.id }}"
+                                               value="{% if result.classwork %}{{ result.classwork|floatformat:1 }}{% endif %}" min="0" max="10" step="1" {% if not is_editable %}disabled{% endif %}>
+                                        <div class="invalid-feedback">Enter a score between 0 and 10.</div>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control bg-dark text-white" name="nursery_primary_exam_{{ subject.id }}"
+                                               value="{% if result.nursery_primary_exam %}{{ result.nursery_primary_exam|floatformat:1 }}{% endif %}" min="0" max="60" step="1" {% if not is_editable %}disabled{% endif %}>
+                                        <div class="invalid-feedback">Enter a score between 0 and 60.</div>
+                                    </td>
+                                    {% else %}
+                                    <td>
+                                        <input type="number" class="form-control bg-dark text-white" name="ca_{{ subject.id }}"
+                                               value="{% if result.ca %}{{ result.ca|floatformat:1 }}{% endif %}" min="0" max="10" step="1" {% if not is_editable %}disabled{% endif %}>
+                                        <div class="invalid-feedback">Enter a score between 0 and 10.</div>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control bg-dark text-white" name="test_1_{{ subject.id }}"
+                                               value="{% if result.test_1 %}{{ result.test_1|floatformat:1 }}{% endif %}" min="0" max="10" step="1" {% if not is_editable %}disabled{% endif %}>
+                                        <div class="invalid-feedback">Enter a score between 0 and 10.</div>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control bg-dark text-white" name="test_2_{{ subject.id }}"
+                                               value="{% if result.test_2 %}{{ result.test_2|floatformat:1 }}{% endif %}" min="0" max="10" step="1" {% if not is_editable %}disabled{% endif %}>
+                                        <div class="invalid-feedback">Enter a score between 0 and 10.</div>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control bg-dark text-white" name="exam_{{ subject.id }}"
+                                               value="{% if result.exam %}{{ result.exam|floatformat:1 }}{% endif %}" min="0" max="70" step="1" {% if not is_editable %}disabled{% endif %}>
+                                        <div class="invalid-feedback">Enter a score between 0 and 70.</div>
+                                    </td>
+                                    {% endif %}
+                                    <td>{{ result.total_score|floatformat:1|default:"0.0" }}</td>
+                                    <td>{{ result.grade|default:"-" }}</td>
+                                    <td>{{ result.description|default:"-" }}</td>
+                                    {% endwith %}
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="{% if is_nursery %}4{% elif is_primary %}7{% else %}8{% endif %}" class="text-center">No subjects assigned</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label hp-p1-body">Teacher Remarks</label>
+                        <textarea class="form-control bg-dark text-white" id="remarks" name="remarks" rows="4" maxlength="500" placeholder="Enter remarks for this student (Optional)" {% if not is_editable %}disabled{% endif %}>{{ remarks }}</textarea>
+                    </div><br>
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-dark" {% if not is_editable %}disabled{% endif %}>Update Results</button>
+                        <a href="{% url 'teacher_view_students' %}" class="btn btn-transparent">Cancel</a>
+                    </div>
+                </form>
+
+                {% else %}
+                <p class="hp-p1-body">No subjects assigned to this student. Please assign subjects first.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('.toast').each(function() {
+            var toast = new bootstrap.Toast(this, {
+                autohide: true,
+                delay: 5000
+            });
+            toast.show();
+        });
+
+        $('#update_result_form').on('submit', function(e) {
+            let form = this;
+            if (form.checkValidity() === false) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            $(form).addClass('was-validated');
+        });
+    });
+</script>
+{% endblock %}

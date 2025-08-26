@@ -1,0 +1,289 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+{% block content %}
+    <div class="hp-main-layout-content">
+        <div class="row mb-32 gy-32">
+            <div class="col-12">
+                <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                    <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0px; right: 0px;">
+                        <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                        <defs>
+                            <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#fff"></stop>
+                                <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="row align-items-center">
+                        <div class="col-sm-6 col-12">
+                            <h1 class="mb-0 hp-text-color-black-0">Student Details</h1>
+                            <h4 class="mt-8 hp-text-color-black-0">View details for {{ student.full_name }}</h4>
+                            {% if role == 'admin' %}
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateStudentModal">Update Student</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Token Display Section -->
+            <div class="col-12">
+                <div class="card hp-bg-color-dark-90 p-24 mb-32">
+                    <h3>Student Access Token</h3>
+                    <div class="d-flex align-items-center">
+                        <p id="student-token" class="display-4 mb-0 me-3">
+                            {{ student.token|default:'No token generated' }}
+                        </p>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <button id="copy-token-btn" class="btn btn-dark me-3" onclick="copyToken()">Copy Token</button>&nbsp;
+                        {% if role == 'teacher' %}
+                        <button id="generate-token-btn" class="btn btn-transparent" 
+                                data-admission-number="{{ student.admission_number }}">
+                            Generate New Token
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <!-- Personal Information and Payment History -->
+            <div class="col-12">
+                <div class="row g-32">
+                    <div class="col-12 col-md-6">
+                        <div class="card hp-bg-color-dark-90 p-24">
+                            <h3>Personal Information</h3>
+                            <p><strong>Admission Number:</strong> {{ student.admission_number }}</p>
+                            <p><strong>Full Name:</strong> {{ student.full_name }}</p>
+                            <p><strong>Class:</strong> {{ student.current_section|default:'N/A' }}</p>
+                            <p><strong>Session:</strong> {{ student.current_section.session.name|default:'N/A' }}</p>
+                            <p><strong>Gender:</strong> {{ student.get_gender_display }}</p>
+                            <p><strong>Date of Birth:</strong> {{ student.date_of_birth }}</p>
+                            <p><strong>Parent Phone:</strong> {{ student.parent_phone }}</p>
+                            <p><strong>Address:</strong> {{ student.address }}</p>
+                            {% if student.photo %}
+                            <p><strong>Photo:</strong><br><img src="{{ student.photo.url }}" alt="Student Photo" style="width: 100px; height: 100px;"></p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if role == 'admin' %}
+                    <div class="col-12 col-md-6">
+                        <div class="card hp-bg-color-dark-90 p-24">
+                            <h3>Payment History</h3>
+                            {% if payments %}
+                            <div class="table-responsive">
+                                <table class="table table-dark table-striped" id="payment_table">
+                                    <thead>
+                                        <tr>
+                                            <th>Session</th>
+                                            <th>Term</th>
+                                            <th>Amount (XOF)</th>
+                                            <th>Status</th>
+                                            <th>Transaction ID</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="payment_table_body">
+                                        {% for payment in payments %}
+                                        <tr>
+                                            <td>{{ payment.session.name }}</td>
+                                            <td>{{ payment.get_term_display }}</td>
+                                            <td>{{ payment.amount }}</td>
+                                            <td>{{ payment.status }}</td>
+                                            <td>{{ payment.transaction_id|default:'N/A' }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <nav aria-label="Payment pagination">
+                                <ul class="pagination justify-content-center mt-3" id="payment_pagination">
+                                    {% if payment_page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link bg-dark text-white" href="#" data-page="{{ payment_page_obj.previous_page_number }}">Previous</a>
+                                    </li>
+                                    {% endif %}
+                                    {% for num in payment_page_obj.paginator.page_range %}
+                                    <li class="page-item {% if payment_page_obj.number == num %}active{% endif %}">
+                                        <a class="page-link bg-dark text-white" href="#" data-page="{{ num }}">{{ num }}</a>
+                                    </li>
+                                    {% endfor %}
+                                    {% if payment_page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link bg-dark text-white" href="#" data-page="{{ payment_page_obj.next_page_number }}">Next</a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                            {% else %}
+                            <p class="hp-p1-body">No payment history available.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if role == 'admin' %}
+    <div class="modal fade" id="updateStudentModal" tabindex="-1" aria-labelledby="updateStudentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content hp-bg-color-dark-90 text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateStudentModalLabel">Update Student</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{% url 'update_student' student.admission_number %}" enctype="multipart/form-data" id="update_student_form" novalidate>
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="full_name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control bg-dark text-white" id="full_name" name="full_name" value="{{ student.full_name }}" required>
+                                <div class="invalid-feedback">Please enter the full name.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="date_of_birth" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control bg-dark text-white" id="date_of_birth" name="date_of_birth" value="{{ student.date_of_birth }}" required>
+                                <div class="invalid-feedback">Please enter the date of birth.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="address" class="form-label">Address</label>
+                                <input type="text" class="form-control bg-dark text-white" id="address" name="address" value="{{ student.address }}" required>
+                                <div class="invalid-feedback">Please enter the address.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="parent_phone" class="form-label">Parent Phone</label>
+                                <input type="text" class="form-control bg-dark text-white" id="parent_phone" name="parent_phone" value="{{ student.parent_phone }}" pattern="\+?[0-9]{10,15}" required>
+                                <div class="invalid-feedback">Please enter a valid phone number.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="gender" class="form-label">Gender</label>
+                                <select class="form-select bg-dark text-white" id="gender" name="gender" required>
+                                    <option value="M" {% if student.gender == 'M' %}selected{% endif %}>Male</option>
+                                    <option value="F" {% if student.gender == 'F' %}selected{% endif %}>Female</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a gender.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="class_section" class="form-label">Class Section</label>
+                                <select class="form-select bg-dark text-white" id="class_section" name="class_section" required>
+                                    <option value="">Select Class Section</option>
+                                    {% for class_section in class_sections %}
+                                    <option value="{{ class_section.id }}" {% if class_section.id == student.current_section.id %}selected{% endif %}
+                                            data-is-creche="{% if class_section.school_class.level == 'Creche' %}true{% else %}false{% endif %}">
+                                        {{ class_section }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a class section.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="photo" class="form-label">Profile Picture (Optional)</label>
+                                <input type="file" class="form-control bg-dark text-white" id="photo" name="photo" accept="image/*">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Update Student</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div id="toast-container" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#update_student_form').on('submit', function(e) {
+                let form = this;
+                if (form.checkValidity() === false) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                $(form).addClass('was-validated');
+            });
+
+            $('#payment_pagination').on('click', 'a.page-link', function(e) {
+                e.preventDefault();
+                let page = $(this).data('page');
+                window.location.search = `?payment_page=${page}`;
+            });
+
+            $('#generate-token-btn').on('click', function() {
+                const admissionNumber = $(this).data('admission-number');
+                const button = $(this);
+                
+                button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
+                
+                $.ajax({
+                    url: '{% url 'generate_student_token' %}',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    data: {
+                        admission_number: admissionNumber
+                    },
+                    success: function(data) {
+                        button.prop('disabled', false).text('Generate New Token');
+                        if (data.success) {
+                            $('#student-token').text(data.token);
+                            showToast('success', data.message);
+                            
+                            // Only log out if the current user is the student whose token was changed
+                            if ('{{ user.username }}' === admissionNumber) {
+                                setTimeout(function() {
+                                    window.location.href = '{% url "logout" %}';
+                                }, 2000);
+                            }
+                        } else {
+                            showToast('error', data.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        button.prop('disabled', false).text('Generate New Token');
+                        showToast('error', 'An error occurred while generating the token');
+                        console.error(error);
+                    }
+                });
+            });
+
+            function copyToken() {
+                const token = document.getElementById('student-token').textContent;
+                navigator.clipboard.writeText(token).then(() => {
+                    showToast('success', 'Token copied to clipboard');
+                }).catch(() => {
+                    showToast('error', 'Failed to copy token');
+                });
+            }
+
+            function showToast(type, message) {
+                const toast = $('<div>')
+                    .addClass(`toast align-items-center text-white bg-${type} border-0`)
+                    .attr({
+                        'role': 'alert',
+                        'aria-live': 'assertive',
+                        'aria-atomic': 'true'
+                    })
+                    .html(`
+                        <div class="d-flex">
+                            <div class="toast-body">${message}</div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    `);
+
+                $('#toast-container').append(toast);
+                const bsToast = new bootstrap.Toast(toast[0]);
+                bsToast.show();
+                toast.on('hidden.bs.toast', function() {
+                    toast.remove();
+                });
+            }
+        });
+    </script>
+{% endblock content %}

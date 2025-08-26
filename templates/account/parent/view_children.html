@@ -1,0 +1,49 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+{% block content %}
+    <div class="hp-main-layout-content">
+        <div class="row mb-32 gy-32">
+            <div class="col-12">
+                <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                    <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0px; right: 0px;">
+                        <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                        <defs>
+                            <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#fff"></stop>
+                                <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="row">
+                        <div class="col-12">
+                            <h1 class="mb-0 hp-text-color-black-0">Your Children</h1>
+                            <h4 class="mt-8 hp-text-color-black-0">View academic records for your children</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="row g-32">
+                    {% if children.exists %}
+                        {% for child in children %}
+                            <div class="col-12 col-md-6">
+                                <div class="card hp-bg-color-dark-90 p-24">
+                                    <h3>{{ child.full_name }}</h3>
+                                    <p class="hp-p1-body">Admission Number: {{ child.admission_number }}</p>
+                                    <p class="hp-p1-body">Class: {{ child.current_class.level|default:"N/A" }}</p>
+                                    <a href="{% url 'parent_view_child_grades' child.admission_number %}" class="btn btn-dark mt-16">View Grades</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12">
+                            <div class="card hp-bg-color-dark-90 p-24">
+                                <p class="hp-p1-body">No children registered.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

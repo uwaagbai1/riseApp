@@ -1,0 +1,103 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <h1 class="mb-0 hp-text-color-black-0">Class Sections Management</h1>
+                <h4 class="mt-8 hp-text-color-black-0">Manage class sections for each academic session</h4>
+            </div>
+        </div>
+        
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24">
+                <h4>Create New Section</h4>
+                <form method="POST" class="mb-32">
+                    {% csrf_token %}
+                    <div class="row g-24">
+                        <div class="col-md-4">
+                            <label for="class_id" class="form-label">Class</label>
+                            <select class="form-select bg-dark text-white" id="class_id" name="class_id" required>
+                                <option value="">Select Class</option>
+                                {% for class in classes %}
+                                    <option value="{{ class.id }}">{{ class.level }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="suffix" class="form-label">Section</label>
+                            <select class="form-select bg-dark text-white" id="suffix" name="suffix" required>
+                                <option value="">Select</option>
+                                {% for suffix in section_suffixes %}
+                                    <option value="{{ suffix }}">{{ suffix }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="session_id" class="form-label">Session</label>
+                            <select class="form-select bg-dark text-white" id="session_id" name="session_id" required>
+                                <option value="">Select Session</option>
+                                {% for session in sessions %}
+                                    <option value="{{ session.id }}" {% if session == current_session %}selected{% endif %}>{{ session.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-dark">Create Section</button>
+                        </div>
+                    </div>
+                </form>
+                
+                <h4>Existing Sections</h4>
+                {% for session, sections in sections_by_session.items %}
+                    <div class="mb-32">
+                        <h5 class="mb-16">{{ session.name }} Session</h5>
+                        {% if sections %}
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Class Section</th>
+                                            <th>Assigned Teachers</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for section in sections %}
+                                            <tr>
+                                                <td>{{ section }}</td>
+                                                <td>
+                                                    {% for teacher in section.teachers.all %}
+                                                        <p>{{ teacher.full_name }}</p>
+                                                    {% empty %}
+                                                        <span class="text-muted">No teachers assigned</span>
+                                                    {% endfor %}
+                                                </td>
+                                                <td>
+                                                    <span class="badge {% if section.is_active %}bg-success{% else %}bg-danger{% endif %}" style="font-size: 1.0em;color: black;">
+                                                        {{ section.is_active|yesno:"Active,Inactive" }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'admin_update_section' section.id %}" class="btn btn-sm btn-dark me-2">Manage</a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-dark">
+                                No sections created for this session
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

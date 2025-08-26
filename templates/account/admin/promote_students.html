@@ -1,0 +1,129 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+{% block content %}
+<div class="hp-main-layout-content">
+    <h1>Promote or Demote Students</h1>
+    <p>Manage student promotions or demotions for the next session ({{ next_session.name }}). {{ students_count }} students are eligible.</p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if class_data %}
+    <div class="mb-3">
+        <form method="POST" id="global-promotion-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="promote_all">
+            <button type="submit" class="btn btn-dark" onclick="return confirm('Are you sure you want to promote ALL eligible students across all classes?')">Promote All Classes</button>
+            <a href="{% url 'admin_student_management' %}" class="btn btn-transparent">Cancel</a>
+        </form>
+    </div>
+
+    <div class="accordion" id="classAccordion">
+        {% for data in class_data %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ data.school_class.id }}">
+                <button class="accordion-button {% if forloop.first %}show{% else %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#collapse{{ data.school_class.id }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" 
+                        aria-controls="collapse{{ data.school_class.id }}">
+                    {{ data.school_class.level }} ({{ data.page_obj.paginator.count }} students, Next: {{ data.next_class }})
+                </button>
+            </h2>
+            <div id="collapse{{ data.school_class.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" 
+                 aria-labelledby="heading{{ data.school_class.id }}" data-bs-parent="#classAccordion">
+                <div class="accordion-body">
+                    <form method="POST" id="form-{{ data.school_class.id }}">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between mb-3">
+                            <div>
+                                <button type="submit" name="action" value="promote" class="btn btn-dark me-2" 
+                                        onclick="return confirm('Are you sure you want to promote the selected students in {{ data.school_class.level }}?')">
+                                    Promote {{ data.school_class.level }}
+                                </button>
+                                <button type="submit" name="action" value="demote" class="btn btn-warning me-2" 
+                                        onclick="return confirm('Are you sure you want to demote the selected students in {{ data.school_class.level }}?')">
+                                    Demote {{ data.school_class.level }}
+                                </button>
+                            </div>
+                            <div>
+                                <input type="checkbox" id="select-all-{{ data.school_class.id }}" class="select-all me-2">
+                                <label for="select-all-{{ data.school_class.id }}">Select All</label>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Select</th>
+                                        <th>Admission Number</th>
+                                        <th>Full Name</th>
+                                        <th>Current Section</th>
+                                        <th>Target Class</th>
+                                        <th>Target Section</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student_data in data.students %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="students" value="{{ student_data.student.admission_number }}" 
+                                                   class="student-checkbox student-checkbox-{{ data.school_class.id }}">
+                                        </td>
+                                        <td>{{ student_data.student.admission_number }}</td>
+                                        <td>{{ student_data.student.full_name }}</td>
+                                        <td>{{ student_data.student.current_section.suffix|default:'N/A' }}</td>
+                                        <td>{{ student_data.next_class.level|default:'No Promotion' }}</td>
+                                        <td>{{ student_data.next_section.suffix|default:'N/A' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if data.page_obj.has_other_pages %}
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                {% if data.page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{{ data.page_param }}={{ data.page_obj.previous_page_number }}">Previous</a>
+                                </li>
+                                {% endif %}
+                                {% for num in data.page_obj.paginator.page_range %}
+                                <li class="page-item {% if data.page_obj.number == num %}active{% endif %}">
+                                    <a class="page-link" href="?{{ data.page_param }}={{ num }}">{{ num }}</a>
+                                </li>
+                                {% endfor %}
+                                {% if data.page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{{ data.page_param }}={{ data.page_obj.next_page_number }}">Next</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.querySelectorAll('.select-all').forEach(selectAll => {
+            selectAll.addEventListener('change', function() {
+                const classId = this.id.replace('select-all-', '');
+                const checkboxes = document.querySelectorAll(`.student-checkbox-${classId}`);
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+        });
+    </script>
+    {% else %}
+    <p class="hp-p1-body">No eligible students found for promotion.</p>
+    {% endif %}
+</div>
+{% endblock %}

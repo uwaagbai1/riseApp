@@ -1,0 +1,40 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <h1 class="mb-0 hp-text-color-black-0">Assign Teacher to Sections</h1>
+                <h4 class="mt-8 hp-text-color-black-0">{{ teacher.full_name }} - {{ current_session.name }}</h4>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4>Available Sections</h4>
+                            <div class="list-group">
+                                {% for section in all_sections %}
+                                <label class="list-group-item">
+                                    <input class="form-check-input me-2" type="radio" name="sections" value="{{ section.id }}" 
+                                        {% if section in assigned_sections %}checked{% endif %}>
+                                    {{ section.school_class.level }}{{ section.suffix }}
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-dark">Save Assignments</button>
+                        <a href="{% url 'admin_teacher_management' %}" class="btn btn-transparent">Back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

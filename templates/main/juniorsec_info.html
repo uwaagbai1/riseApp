@@ -1,0 +1,164 @@
+{% extends 'main/base_generic.html' %}
+{% block title %} Junior Secondary School {% endblock title %}
+{% load static %}
+{% block content %}
+
+    <div class="page-banner-area text-center position-relative z-1 pt-60 pb-60" style="background-color: #131313;">
+        <div class="container">
+            <h1 class="mb-0 text-white text-uppercase" data-cue="slideInUp">
+                Junior Secondary School
+            </h1>
+        </div>
+    </div>
+
+    <div class="pb-60 border-bottom"></div>
+
+    <div class="course-details-area bg-181818 ptb-120">
+        <div class="container">
+            <div class="row" data-cues="slideInUp" data-group="courseDetailsContent">
+                
+                <div class="col-lg-4 col-md-12">
+                    <div class="course-details-sidebar">
+                        <div class="course-list" style="background-color: #131313;">
+                            <h3 class="fw-semibold text-white">Information</h3>
+                            <ul class="p-0 m-0 list-unstyled">
+                                <li>
+                                    <a href="javascript:void(0)" onclick="openTab('requirements')" class="fw-medium active d-block text-black tab-link" id="requirements-tab">
+                                        School Requirements
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)" onclick="openTab('other')" class="fw-medium d-block text-black tab-link" id="other-tab">
+                                        Other Requirements
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="javascript:void(0)" onclick="openTab('dress')" class="fw-medium d-block text-black tab-link" id="dress-tab">
+                                        Dress Code
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-8 col-md-12">
+                    <div class="course-details-desc">
+                        
+                        {% if item.image %}
+                        <div class="image mb-4">
+                            <img src="{{ item.image.url }}" alt="course-details-image" class="img-fluid rounded shadow">
+                        </div>
+                        {% endif %}
+                        <div id="requirements" class="tab-content active">
+                            <h3 class="fw-semibold">
+                                School Requirements (Junior Secondary School)
+                            </h3>
+                            
+                            <div class="table-container">
+                                <table class="requirements-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Amount (CFA)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Registration fee</td>
+                                            <td>10,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Result booklet</td>
+                                            <td>3,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Form/file</td>
+                                            <td>1,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>P.E uniform</td>
+                                            <td>5,500</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Two sets of school uniform</td>
+                                            <td>24,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Identity card</td>
+                                            <td>2,500</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Maintenance Fee</td>
+                                            <td>5,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Furniture/Practical</td>
+                                            <td>10,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Magazine</td>
+                                            <td>2,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Termly fees</td>
+                                            <td>58,000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>PTA Dues</td>
+                                            <td>2,000</td>
+                                        </tr>
+                                        <tr class="total-row">
+                                            <td><strong>Total</strong></td>
+                                            <td><strong>123,000</strong></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div id="other" class="tab-content">
+                            <h3 class="fw-semibold text-white">
+                                Other Requirements (Junior Secondary School)
+                            </h3>
+                            <ul>
+                                <li class="text-white">2 passport photographs</li>
+                                <li class="text-white">Birth certificate, vaccination cards, and previous school transcript (photocopies)</li>
+                                <li class="text-white">School bag</li>
+                            </ul>
+                        </div>
+
+                        <div id="dress" class="tab-content">
+                            <h3 class="fw-semibold text-white">
+                                Dress Code (Junior Secondary School)
+                            </h3>
+                            <div class="table-container">
+                                <table class="requirements-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Day</th>
+                                            <th>Dress Code</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>Monday</td><td><p class="fw-semibold">White Shirt, Skirt/Trouser, Black Socks, Black Shoe and Tie</p></td></tr>
+                                        <tr><td>Tuesday</td><td><p class="fw-semibold">Blue Shirt, Skirt/Trouser, Black Socks, Black Shoe and Tie</p></td></tr>
+                                        <tr><td>Wednesday</td><td><p class="fw-semibold">Sports Wear, White Socks and White Shoe</p></td></tr>
+                                        <tr><td>Thursday</td><td><p class="fw-semibold">Blue Shirt, Skirt/Trouser, Black Socks, Black Shoe and Tie</p></td></tr>
+                                        <tr><td>Friday</td><td><p class="fw-semibold">Sports Wear, White Socks and White Shoe</p></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h4 class="fw-semibold mt-4 text-white">Appearance Guidelines</h4>
+                            <p class="text-white">
+                                The school dress code promotes a respectful and professional environment. Students are expected to maintain neat hairstyles, clean shoes, and follow grooming standards. Nails must be short and clean. Makeup is not allowed.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}

@@ -1,0 +1,270 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <!-- Header -->
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <div class="row">
+                    <div class="col-12">
+                        <h1 class="mb-0 hp-text-color-black-0">School Statistics</h1>
+                        <h4 class="mt-8 hp-text-color-black-0">Overview for {{ selected_session.name }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Message -->
+        {% if error %}
+        <div class="col-12">
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Session Info -->
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24">
+                <h5>Current Academic Session</h5>
+                <p class="hp-p1-body">{{ selected_session.name }} ({{ selected_session.start_year }} - {{ selected_session.end_year }})</p>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="col-12">
+            <div class="row g-32">
+                <div class="col-md-6">
+                    <div class="card hp-bg-color-dark-90 p-24 shadow-sm">
+                        <div class="d-flex align-items-center justify-content-between mb-16">
+                            <h5 class="mb-0">Total Students</h5>
+                            <i class="hp-text-color-primary-1 ri-user-3-line remix-2x"></i>
+                        </div>
+                        <h1 class="mb-0">{{ session_stats.total_students }}</h1>
+                        <div class="mt-8">
+                            <span class="hp-badge-text hp-text-color-black-80">Active in {{ selected_session.name }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card hp-bg-color-dark-90 p-24 shadow-sm">
+                        <div class="d-flex align-items-center justify-content-between mb-16">
+                            <h5 class="mb-0">Total Teachers</h5>
+                            <i class="hp-text-color-primary-1 ri-team-line remix-2x"></i>
+                        </div>
+                        <h1 class="mb-0">{{ session_stats.total_teachers }}</h1>
+                        <div class="mt-8">
+                            <span class="hp-badge-text hp-text-color-black-80">Currently Employed</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="col-12">
+            <div class="row g-32">
+                <!-- Students by Class Chart -->
+                <div class="col-lg-6 col-12">
+                    <div class="card hp-bg-color-dark-90 p-24 shadow-sm">
+                        <h5 class="mb-16">Students by Class</h5>
+                        <div id="studentsByClassChart" style="height: 300px;"></div>
+                    </div>
+                </div>
+
+                <!-- Gender Distribution Chart -->
+                <div class="col-lg-6 col-12">
+                    <div class="card hp-bg-color-dark-90 p-24 shadow-sm">
+                        <h5 class="mb-16">Gender Distribution</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-center">Students</h6>
+                                <div id="studentGenderChart" style="height: 250px;"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-center">Teachers</h6>
+                                <div id="teacherGenderChart" style="height: 250px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historical Data Table -->
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24 shadow-sm">
+                <h5 class="mb-16">Historical Data</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Academic Session</th>
+                                <th>Total Students</th>
+                                <th>Total Teachers</th>
+                                <th>Student-Teacher Ratio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in historical_data %}
+                            <tr>
+                                <td>{{ data.session.name }} {% if data.session.is_active %}(Current){% endif %}</td>
+                                <td>{{ data.students }}</td>
+                                <td>{{ data.teachers }}</td>
+                                <td>{{ data.ratio }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center">No historical data available.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_previous or page_obj.has_next %}
+                <div class="mt-16">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1" aria-label="First">
+                                        <span aria-hidden="true">««</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                        <span aria-hidden="true">«</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                        <span aria-hidden="true">»</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                        <span aria-hidden="true">»»</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charting Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    // Students by Class Chart
+    var studentsByClassOptions = {
+        series: [{
+            name: 'Students',
+            data: [
+                {% for class_level, count in session_stats.students_by_class.items %}
+                    {{ count }},
+                {% endfor %}
+            ]
+        }],
+        chart: {
+            type: 'bar',
+            height: 300,
+            toolbar: { show: false }
+        },
+        plotOptions: {
+            bar: {
+                borderRadius: 4,
+                horizontal: true,
+            }
+        },
+        colors: ['#6C47FF'],
+        dataLabels: { enabled: false },
+        xaxis: {
+            categories: [
+                {% for class_level, count in session_stats.students_by_class.items %}
+                    '{{ class_level }}',
+                {% endfor %}
+            ],
+            title: { text: 'Number of Students' }
+        },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return val + " students"
+                }
+            }
+        }
+    };
+
+    var studentsByClassChart = new ApexCharts(document.querySelector("#studentsByClassChart"), studentsByClassOptions);
+    studentsByClassChart.render();
+
+    // Student Gender Pie Chart
+    var studentGenderOptions = {
+        series: [
+            {{ session_stats.students_by_gender.M }},
+            {{ session_stats.students_by_gender.F }}
+        ],
+        chart: {
+            type: 'donut',
+            height: 250
+        },
+        labels: ['Male', 'Female'],
+        colors: ['#4A3AFF', '#FF6B8B', '#00C4B4'],
+        legend: { position: 'bottom' },
+        responsive: [{
+            breakpoint: 480,
+            options: {
+                chart: { width: 200 },
+                legend: { position: 'bottom' }
+            }
+        }]
+    };
+
+    var studentGenderChart = new ApexCharts(document.querySelector("#studentGenderChart"), studentGenderOptions);
+    studentGenderChart.render();
+
+    // Teacher Gender Pie Chart
+    var teacherGenderOptions = {
+        series: [
+            {{ session_stats.teachers_by_gender.M }},
+            {{ session_stats.teachers_by_gender.F }}
+        ],
+        chart: {
+            type: 'donut',
+            height: 250
+        },
+        labels: ['Male', 'Female'],
+        colors: ['#4A3AFF', '#FF6B8B', '#00C4B4'],
+        legend: { position: 'bottom' },
+        responsive: [{
+            breakpoint: 480,
+            options: {
+                chart: { width: 200 },
+                legend: { position: 'bottom' }
+            }
+        }]
+    };
+
+    var teacherGenderChart = new ApexCharts(document.querySelector("#teacherGenderChart"), teacherGenderOptions);
+    teacherGenderChart.render();
+</script>
+{% endblock %}

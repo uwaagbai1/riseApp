@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fee Statistics</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #000; padding: 8px; }
+        th { background-color: #f2f2f2; text-align: left; font-size: 14px; }
+        td { font-size: 12px; }
+        .text-right { text-align: right; }
+        .fee-highlight { font-weight: bold; }
+        .paid-highlight { font-weight: bold; color: #2e7d32; }
+        .outstanding-highlight { font-weight: bold; color: #d32f2f; }
+        h2, h3 { text-align: center; }
+        .total-card { text-align: center; margin-bottom: 20px; }
+        .progress { height: 20px; width: 120px; background-color: #e0e0e0; margin-left: auto; }
+        .progress-bar { background-color: #2e7d32; height: 100%; text-align: right; padding-right: 5px; color: white; }
+    </style>
+</head>
+<body>
+    <h2>Fee Statistics - {{ current_session.name }} Term {{ current_term }}</h2>
+    <p style="text-align: center;">Rehoboth International School of Excellence</p>
+    <p style="text-align: center;">Generated on {{ date_generated|date:'d M Y' }}</p>
+    
+    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+        <div class="total-card" style="width: 30%;">
+            <h3 class="fee-highlight">Total Expected</h3>
+            <p>{{ total_expected|floatformat:2 }} XOF</p>
+        </div>
+        <div class="total-card" style="width: 30%;">
+            <h3 class="paid-highlight">Total Paid</h3>
+            <p>{{ total_paid|floatformat:2 }} XOF</p>
+        </div>
+        <div class="total-card" style="width: 30%;">
+            <h3 class="outstanding-highlight">Total Outstanding</h3>
+            <p>{{ total_outstanding|floatformat:2 }} XOF</p>
+        </div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Section</th>
+                <th>Students</th>
+                <th class="text-right fee-highlight">Expected (XOF)</th>
+                <th class="text-right paid-highlight">Paid (XOF)</th>
+                <th class="text-right outstanding-highlight">Outstanding (XOF)</th>
+                <th class="text-right">Paid (%)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in stats_data %}
+                <tr>
+                    <td>{{ item.section }}</td>
+                    <td>{{ item.student_count }}</td>
+                    <td class="text-right fee-highlight">{{ item.expected|floatformat:2 }}</td>
+                    <td class="text-right paid-highlight">{{ item.paid|floatformat:2 }}</td>
+                    <td class="text-right outstanding-highlight">{{ item.outstanding|floatformat:2 }}</td>
+                    <td class="text-right">
+                        <div class="progress">
+                            <div class="progress-bar" style="width: {{ item.percentage_paid }}%;">
+                                {{ item.percentage_paid|floatformat:2 }}%
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6">No fee data available</td></tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2" class="text-right">Total:</td>
+                <td class="text-right fee-highlight">{{ total_expected|floatformat:2 }}</td>
+                <td class="text-right paid-highlight">{{ total_paid|floatformat:2 }}</td>
+                <td class="text-right outstanding-highlight">{{ total_outstanding|floatformat:2 }}</td>
+                <td class="text-right">
+                    <div class="progress">
+                        <div class="progress-bar" style="width: {{ total_percentage_paid }}%;">
+                            {{ total_percentage_paid|floatformat:2 }}%
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</body>
+</html>

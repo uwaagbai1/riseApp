@@ -1,0 +1,165 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0px; right: 0px;">
+                    <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                    <defs>
+                        <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fff"></stop>
+                            <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="row">
+                    <div class="col-12">
+                        <h1 class="mb-0 hp-text-color-black-0">Manage Student Subjects</h1>
+                        <p class="mt-8 hp-text-color-black-0">Assign subjects for {{ current_session.name }} Term {{ current_term }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24">
+                {% if messages %}
+                <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+                    {% for message in messages %}
+                    <div class="toast align-items-center text-white {% if message.tags == 'error' %}bg-danger{% else %}bg-success{% endif %} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                {{ message }}
+                            </div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label hp-p1-body">Class Section</label>
+                        <form method="get" class="mb-3">
+                            <select name="section" class="form-select bg-dark text-white" onchange="this.form.submit()">
+                                {% for section in teacher_sections %}
+                                <option value="{{ section.id }}" {% if section.id == selected_section.id %}selected{% endif %}>
+                                    {{ section }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label hp-p1-body">Student</label>
+                        <form method="get" class="mb-3">
+                            <input type="hidden" name="section" value="{{ selected_section.id }}">
+                            <select name="student" class="form-select bg-dark text-white" onchange="this.form.submit()">
+                                <option value="">Select Student</option>
+                                {% for student in students %}
+                                <option value="{{ student.admission_number }}" 
+                                    {% if student.admission_number == selected_student.admission_number %}selected{% endif %}>
+                                    {{ student.full_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                </div>
+
+                {% if selected_student %}
+                <form method="post" id="subject_form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="assign_subjects">
+                    <input type="hidden" name="student" value="{{ selected_student.admission_number }}">
+                    <br>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th width="40px">Select</th>
+                                    <th>Subject</th>
+                                    <th>Type</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in class_subjects %}
+                                <tr>
+                                    <td>
+                                        <input class="form-check-input" type="checkbox" 
+                                            name="subjects" value="{{ subject.id }}" 
+                                            id="subject_{{ subject.id }}"
+                                            {% if subject.id in student_subjects %}checked{% endif %}
+                                            {% if subject.compulsory %}checked onclick="return false;"{% endif %}>
+                                    </td>
+                                    <td>
+                                        <label class="form-check-label" for="subject_{{ subject.id }}">
+                                            {{ subject.name }}
+                                        </label>
+                                    </td>
+                                    <td>
+                                        {% if subject.compulsory %}
+                                        <span>Compulsory</span>
+                                        {% else %}
+                                        <span>Elective</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No subjects available for this class</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-dark">Save Subjects</button>
+                        <a href="{% url 'teacher_view_students' %}" class="btn btn-transparent">Cancel</a>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('.toast').each(function() {
+        var toast = new bootstrap.Toast(this, {
+            autohide: true,
+            delay: 5000
+        });
+        toast.show();
+    });
+
+    $('#subject_form').submit(function() {
+        $('input[type="checkbox"][onclick="return false;"]').each(function() {
+            $(this).prop('disabled', false);
+        });
+        return true;
+    });
+});
+</script>
+
+<style>
+    .table-dark {
+        background-color: #1a1a1a;
+    }
+    .table-dark th {
+        background-color: #2a2a2a;
+    }
+    .form-check-input {
+        width: 1.2em;
+        height: 1.2em;
+        margin-top: 0.2em;
+    }
+</style>
+{% endblock %}

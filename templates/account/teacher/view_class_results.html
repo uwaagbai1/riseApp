@@ -1,0 +1,341 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <div class="row">
+                    <div class="col-12">
+                        <h1 class="mb-0 hp-text-color-black-0">Class Results: {{ section }}</h1>
+                        <h4 class="mt-8 hp-text-color-black-0">
+                            Session: {{ session.name }} | Term: {{ term_display }}
+                        </h4>
+                        <div class="d-flex flex-wrap gap-16 mt-16 align-items-center">
+                            <a href="{% url 'teacher_view_students' %}?section={{ section.id }}" 
+                               class="btn btn-primary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Students
+                            </a>
+                            <div class="ms-auto d-flex flex-wrap gap-8 align-items-center">
+                                <span class="badge-enhanced completion">
+                                    <i class="fas fa-tasks"></i>
+                                    {{ students_with_complete_results }}/{{ total_students }} Complete
+                                </span>
+                                
+                                <span class="badge-enhanced average">
+                                    <i class="fas fa-chart-line"></i>
+                                    Class Avg: {{ class_average_score|floatformat:2 }}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24 shadow-sm">
+                {% for student_result in page_obj %}
+                <div class="mb-32">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-16">
+                        <div class="d-flex align-items-center mb-16 mb-md-0">
+                            {% if student_result.student.photo %}
+                            <img src="{{ student_result.student.photo.url }}" 
+                                 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;"
+                                 alt="{{ student_result.student.full_name }}">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary me-3 d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="bi bi-person-fill text-white" style="font-size: 1.5rem;"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h5 class="mb-2">{{ student_result.student.full_name }}</h5>
+                                <div class="text-muted small">
+                                    {{ student_result.student.admission_number }} | 
+                                    {% if student_result.class_position %}
+                                        Position: {{ student_result.class_position }}
+                                    {% else %}
+                                        Position: -
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="fw-bold fs-4">{{ student_result.average_score|floatformat:2 }}%</div>
+                            <div class="text-muted small">Average Score</div>
+                            {% if not is_nursery and not is_primary and student_result.class_position_gp %}
+                            <div class="text-muted small mt-2">
+                                G.P: {{ student_result.results|first|lookup:'result_obj'|lookup:'grade_point'|floatformat:2|default:"-" }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="table">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table">
+                                <tr>
+                                    <th scope="col">Subject</th>
+                                    {% if is_nursery %}
+                                        <th scope="col" class="text-center">Total Marks</th>
+                                    {% elif is_primary %}
+                                        <th scope="col" class="text-center">Test (20)</th>
+                                        <th scope="col" class="text-center">Homework (10)</th>
+                                        <th scope="col" class="text-center">Classwork (10)</th>
+                                        <th scope="col" class="text-center">Exam (60)</th>
+                                    {% else %}
+                                        <th scope="col" class="text-center">C.A (10)</th>
+                                        <th scope="col" class="text-center">Test 1 (10)</th>
+                                        <th scope="col" class="text-center">Test 2 (10)</th>
+                                        <th scope="col" class="text-center">Exam (70)</th>
+                                    {% endif %}
+                                    <th scope="col" class="text-center">Total (100)</th>
+                                    <th scope="col" class="text-center">Grade</th>
+                                    {% if not is_nursery and not is_primary %}
+                                        <th scope="col" class="text-center">G.P</th>
+                                    {% endif %}
+                                    <th scope="col" class="text-center">Subject Position</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in subjects %}
+                                {% with result=student_result.results|lookup:subject.id %}
+                                {% if result.is_assigned %}
+                                <tr>
+                                    <td>{{ subject.name }}</td>
+                                    
+                                    {% if is_nursery %}
+                                        <td class="text-center">
+                                            {{ result.result_obj.total_marks|floatformat:1|default:"-" }}
+                                        </td>
+                                    {% elif is_primary %}
+                                        <td class="text-center">
+                                            {{ result.result_obj.test|floatformat:1|default:"-" }}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ result.result_obj.homework|floatformat:1|default:"-" }}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ result.result_obj.classwork|floatformat:1|default:"-" }}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ result.result_obj.nursery_primary_exam|floatformat:1|default:"-" }}
+                                        </td>
+                                    {% else %}
+                                        <td class="text-center">
+                                            {{ result.result_obj.ca|floatformat:1|default:"-" }}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ result.result_obj.test_1|floatformat:1|default:"-" }}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ result.result_obj.test_2|floatformat:1|default:"-" }}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ result.result_obj.exam|floatformat:1|default:"-" }}
+                                        </td>
+                                    {% endif %}
+                                    
+                                    <td class="text-center fw-bold">
+                                        {% if result.result_obj and result.result_obj.total_score > 0 %}
+                                            {{ result.result_obj.total_score|floatformat:1 }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <td class="text-center">
+                                        {% if result.result_obj and result.result_obj.total_score > 0 %}
+                                            {{ result.result_obj.grade }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    
+                                    {% if not is_nursery and not is_primary %}
+                                    <td class="text-center">
+                                        {% if result.result_obj and result.result_obj.total_score > 0 %}
+                                            {{ result.result_obj.grade_point|floatformat:1|default:"-" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    {% endif %}
+                                    
+                                    <td class="text-center">
+                                        {% if result.result_obj and result.result_obj.total_score > 0 %}
+                                            {{ result.result_obj.subject_position|default:"-" }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endwith %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-16">
+                        <div class="alert alert-dark">
+                            <strong>Teacher's Remark:</strong> 
+                            {{ student_result.remarks }}
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-32">
+                {% empty %}
+                <div class="text-center py-32">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No results available for this class section.
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if page_obj.paginator.num_pages > 1 %}
+                <nav class="mt-24" aria-label="Pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="First">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                        {% if num == page_obj.number %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Responsive styles */
+@media (max-width: 768px) {
+    .hp-bg-black-bg {
+        padding: 24px !important;
+    }
+    
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+    
+    .table th, .table td {
+        padding: 8px;
+    }
+    
+    .d-flex.align-items-center {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 8px;
+    }
+    
+    .ms-auto {
+        margin-left: 0 !important;
+        margin-top: 8px;
+    }
+    
+    .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 576px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    h4 {
+        font-size: 1rem;
+    }
+    
+    .table {
+        font-size: 0.8rem;
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+    
+    .pagination {
+        font-size: 0.85rem;
+    }
+    
+    .page-link {
+        padding: 6px 12px;
+    }
+}
+
+/* Enhance table readability */
+.table-bordered {
+    border: 1px solid #dee2e6;
+}
+
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid #dee2e6;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.card {
+    border: none;
+    border-radius: 16px;
+}
+
+.rounded-circle {
+    object-fit: cover;
+}
+
+.pagination .page-link {
+    color: #007bff;
+    border-radius: 4px;
+    margin: 0 2px;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+}
+</style>
+{% endblock %}

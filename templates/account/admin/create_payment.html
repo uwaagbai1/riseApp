@@ -1,0 +1,732 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .fee-highlight {
+        font-weight: bold;
+        background-color: #2a2a2a;
+    }
+    .total-fees {
+        font-weight: bold;
+    }
+    .amount-paid {
+        color: #2e7d32; /* Green for paid */
+        font-weight: bold;
+    }
+    .amount-due {
+        color: #d32f2f; /* Red for due */
+        font-weight: bold;
+    }
+    .edit-payment-btn, .delete-payment-btn, .edit-fee-btn {
+        cursor: pointer;
+        color: #1976d2;
+    }
+    .edit-payment-btn:hover, .delete-payment-btn:hover, .edit-fee-btn:hover {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0; right: 0;">
+                    <path d="M730.404 135.471 369.675-6.641l88.802-441-243.179-98.8 246.364 263.281-329.128-126.441 114.698 166.726-277.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs>
+                        <linearGradient id="a" x1="315.467" y1="6.875" x2="397.657" y2="329.724" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fff"/>
+                            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <h1 class="mb-0 hp-text-color-black-0">Create Family Payment</h1>
+                <h4 class="mt-8 hp-text-color-black-0">Record or edit payments for a family</h4>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24" style="border-radius: 16px;">
+                <div id="message_container">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <form id="payment_form" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" id="form_action" value="create">
+                    <input type="hidden" name="payment_id" id="payment_id">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label for="session_id" class="form-label hp-p1-body">Session</label>
+                            <select class="form-select bg-dark text-white" id="session_id" name="session_id" required>
+                                {% for session in sessions %}
+                                    <option value="{{ session.id }}" {% if session == current_session %}selected{% endif %}>{{ session.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="term" class="form-label hp-p1-body">Term</label>
+                            <select class="form-select bg-dark text-white" id="term" name="term" required>
+                                {% for value, label in term_choices %}
+                                    <option value="{{ value }}" {% if value == current_term %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="student_search" class="form-label hp-p1-body">Search</label>
+                            <input type="text" class="form-control bg-dark text-white" id="student_search" placeholder="e.g., 2024001, John Doe, +22890000000" aria-label="Search by admission number, name, or parent phone" autocomplete="false">
+                        </div>
+                    </div>
+                    <div id="family_details" class="table-responsive mb-4">
+                        <table class="table" id="family_table" style="font-size: 0.95rem;">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Class</th>
+                                    <th style="text-align: right;">Fee (XOF)</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="family_table_body">
+                                <tr><td colspan="4" class="text-center">Search to display family details</td></tr>
+                            </tbody>
+                            <tfoot id="family_summary" style="display: none;">
+                                <tr style="background-color: #1a1a1a; font-size: 1.1rem;">
+                                    <td colspan="3" class="text-end">Total Student Fees:</td>
+                                    <td id="total_student_fees" style="text-align: right;" class="total-fees">0.00</td>
+                                </tr>
+                                <tr id="pta_dues_row" style="background-color: #1a1a1a; font-size: 1.1rem; display: none;">
+                                    <td colspan="3" class="text-end">PTA Dues (First Term):</td>
+                                    <td id="pta_dues" style="text-align: right;" class="total-fees">0.00</td>
+                                </tr>
+                                <tr style="background-color: #1a1a1a; font-size: 1.1rem;">
+                                    <td colspan="3" class="text-end">Total Fees:</td>
+                                    <td id="total_fees" style="text-align: right;" class="total-fees">0.00</td>
+                                </tr>
+                                <tr style="background-color: #1a1a1a; font-size: 1.1rem;">
+                                    <td colspan="3" class="text-end">Amount Paid:</td>
+                                    <td id="amount_paid" style="text-align: right;" class="amount-paid">0.00</td>
+                                </tr>
+                                <tr style="background-color: #1a1a1a; font-size: 1.1rem;">
+                                    <td colspan="3" class="text-end">Amount Due:</td>
+                                    <td id="amount_due" style="text-align: right;" class="amount-due">0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div id="previous_payments" class="table-responsive mb-4" style="display: none;">
+                        <h4 style="font-weight: bold;">Previous Payments</h4>
+                        <table class="table" style="font-size: 0.95rem;">
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th style="text-align: right;">Amount (XOF)</th>
+                                    <th>Status</th>
+                                    <th>Date & Time</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="previous_payments_body">
+                                <tr><td colspan="5" class="text-center">No previous payments</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="payment_amount" class="form-label hp-p1-body">Payment Amount (XOF)</label>
+                            <input type="number" class="form-control bg-dark text-white" id="payment_amount" name="amount" min="0" step="0.01" placeholder="Enter payment amount" disabled>
+                            <div id="payment_amount_error" class="invalid-feedback" style="display: none;"></div>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary" id="submit_payment" disabled>Record Payment</button>
+                            <button type="button" class="btn btn-secondary ms-2" id="cancel_edit" style="display: none;">Cancel Edit</button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="parent_id" name="parent_id">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Modal for Edit Payment Confirmation -->
+<div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPaymentModalLabel">Edit Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to edit the payment with Transaction ID: <span id="modal_transaction_id"></span>?</p>
+                <p>Current Amount: <span id="modal_current_amount"></span> XOF</p>
+                <div class="mb-3">
+                    <label for="modal_payment_amount" class="form-label">New Amount (XOF)</label>
+                    <input type="number" class="form-control bg-dark text-white" id="modal_payment_amount" min="0" step="0.01">
+                    <div id="modal_payment_amount_error" class="invalid-feedback" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm_edit_payment">Confirm Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Modal for Delete Payment Confirmation -->
+<div class="modal fade" id="deletePaymentModal" tabindex="-1" aria-labelledby="deletePaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deletePaymentModalLabel">Delete Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the payment with Transaction ID: <span id="delete_modal_transaction_id"></span>?</p>
+                <p>Amount: <span id="delete_modal_amount"></span> XOF</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm_delete_payment">Confirm Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Modal for Edit Student Fee -->
+<div class="modal fade" id="editFeeModal" tabindex="-1" aria-labelledby="editFeeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editFeeModalLabel">Edit Student Fee</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Editing fee for student: <span id="modal_student_name"></span></p>
+                <p>Current Fee: <span id="modal_current_fee"></span> XOF</p>
+                <div class="mb-3">
+                    <label for="modal_new_fee" class="form-label">New Fee (XOF)</label>
+                    <input type="number" class="form-control bg-dark text-white" id="modal_new_fee" min="0" step="0.01">
+                    <div id="modal_new_fee_error" class="invalid-feedback" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm_edit_fee">Confirm Edit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+function checkJQuery() {
+    if (window.jQuery) {
+        console.log('jQuery loaded successfully');
+        initApplication();
+    } else {
+        console.error('jQuery not loaded, retrying...');
+        setTimeout(checkJQuery, 100);
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    console.log('CSRF Token:', cookieValue);
+    return cookieValue;
+}
+
+function initApplication() {
+    const csrfToken = getCookie('csrftoken');
+    let selectedFamily = null;
+    let editingPaymentId = null;
+    let deletingPaymentId = null;
+    let editingStudentId = null;
+    let modalInitialized = false;
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/\n/g, '')
+            .replace(/\r/g, '');
+    }
+
+    function initializeModal() {
+        if (!modalInitialized && typeof $().modal === 'function') {
+            modalInitialized = true;
+            console.log('Bootstrap modal initialized');
+        } else {
+            console.error('Bootstrap modal not ready');
+        }
+    }
+
+    function safeModalShow(modalId) {
+        if (typeof $().modal === 'function') {
+            $(`#${modalId}`).modal('show');
+            console.log(`Modal ${modalId} shown`);
+        } else {
+            console.error(`Bootstrap modal function not available for ${modalId}`);
+            setTimeout(() => safeModalShow(modalId), 100);
+        }
+    }
+
+    $('#student_search').on('input', function() {
+        const query = $(this).val().trim();
+        const session_id = $('#session_id').val();
+        const term = $('#term').val();
+        console.log('Search triggered:', { query, session_id, term });
+
+        if (query.length < 2 || !session_id || !term) {
+            console.log('Search aborted: invalid input');
+            $('#family_table_body').html('<tr><td colspan="4" class="text-center">Enter at least 2 characters to search. Search by Admission Number, Name, or Parent Phone</td></tr>');
+            $('#family_summary').hide();
+            $('#previous_payments').hide();
+            $('#payment_amount').prop('disabled', true).val('');
+            $('#submit_payment').prop('disabled', true);
+            $('#cancel_edit').hide();
+            $('#form_action').val('create');
+            $('#pta_dues_row').hide();
+            editingPaymentId = null;
+            deletingPaymentId = null;
+            editingStudentId = null;
+            selectedFamily = null;
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'search_family_by_student_name' %}",
+            method: 'GET',
+            headers: { 'X-CSRFToken': csrfToken },
+            data: { query, session_id, term },
+            beforeSend: function() {
+                console.log('AJAX request started for search');
+                $('#family_table_body').html('<tr><td colspan="4" class="text-center">Loading...</td></tr>');
+            },
+            success: function(data) {
+                console.log('Search response:', data);
+                const tbody = $('#family_table_body');
+                tbody.empty();
+                $('#family_summary').hide();
+                $('#previous_payments').hide();
+                $('#payment_amount').prop('disabled', true).val('');
+                $('#submit_payment').prop('disabled', true).text('Record Payment');
+                $('#cancel_edit').hide();
+                $('#form_action').val('create');
+                $('#pta_dues_row').hide();
+                editingPaymentId = null;
+                deletingPaymentId = null;
+                editingStudentId = null;
+                selectedFamily = null;
+
+                if (data.error) {
+                    console.error('Search error:', data.error);
+                    tbody.append(`<tr><td colspan="4" class="text-center text-danger">${escapeHtml(data.error)}</td></tr>`);
+                    return;
+                }
+
+                if (!data.family) {
+                    console.log('No family found');
+                    tbody.html('<tr><td colspan="4" class="text-center">No family found. Try a different search term.</td></tr>');
+                    return;
+                }
+
+                console.log('Displaying family:', data.family);
+                displayFamily(data.family);
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX error:', { status, error, response: xhr.responseJSON });
+                const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Failed to load family details';
+                $('#family_table_body').html(`<tr><td colspan="4" class="text-center text-danger">${escapeHtml(errorMsg)}</td></tr>`);
+                $('#family_summary').hide();
+                $('#previous_payments').hide();
+                $('#payment_amount').prop('disabled', true).val('');
+                $('#submit_payment').prop('disabled', true);
+                $('#cancel_edit').hide();
+                $('#form_action').val('create');
+                $('#pta_dues_row').hide();
+            }
+        });
+    });
+
+    function displayFamily(family) {
+        console.log('Rendering family:', family);
+        selectedFamily = family;
+        const tbody = $('#family_table_body');
+        tbody.empty();
+
+        try {
+            if (family.students && family.students.length > 0) {
+                family.students.forEach(student => {
+                    const feeAmount = parseFloat(student.fee_amount) || 0;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${escapeHtml(student.full_name || 'Unknown')}</td>
+                        <td>${escapeHtml(student.class_level || 'N/A')}</td>
+                        <td style="text-align: right;" class="fee-highlight">${feeAmount.toFixed(2)}</td>
+                        <td><span class="edit-fee-btn" data-student-id="${escapeHtml(student.student_id || '')}" data-student-name="${escapeHtml(student.full_name || 'Unknown')}" data-fee="${feeAmount.toFixed(2)}">Edit</span></td>
+                    `;
+                    tbody.append(row);
+                    if (!student.student_id) {
+                        console.warn(`Missing student_id for student: ${student.full_name}`);
+                    }
+                });
+            } else {
+                console.log('No active students found');
+                tbody.html('<tr><td colspan="4" class="text-center">No active students found</td></tr>');
+            }
+
+            $('#total_student_fees').text((parseFloat(family.total_student_fees) || 0).toFixed(2));
+            $('#pta_dues').text((parseFloat(family.pta_dues) || 0).toFixed(2));
+            $('#total_fees').text((parseFloat(family.total_fees) || 0).toFixed(2));
+            $('#amount_paid').text((parseFloat(family.amount_paid) || 0).toFixed(2));
+            $('#amount_due').text((parseFloat(family.amount_due) || 0).toFixed(2));
+            if (family.is_first_term) {
+                $('#pta_dues_row').show();
+                console.log('Showing PTA dues row');
+            } else {
+                $('#pta_dues_row').hide();
+                console.log('Hiding PTA dues row');
+            }
+            $('#family_summary').show();
+
+            const paymentsBody = $('#previous_payments_body');
+            paymentsBody.empty();
+            if (family.previous_payments && family.previous_payments.length > 0) {
+                family.previous_payments.forEach(payment => {
+                    const paymentRow = document.createElement('tr');
+                    paymentRow.innerHTML = `
+                        <td>${escapeHtml(payment.transaction_id || 'N/A')}</td>
+                        <td style="text-align: right;" class="fee-highlight">${(parseFloat(payment.amount) || 0).toFixed(2)}</td>
+                        <td>${escapeHtml(payment.status || 'Unknown')}</td>
+                        <td>${escapeHtml(payment.datetime || 'N/A')}</td>
+                        <td>
+                            <span class="edit-payment-btn" data-payment-id="${payment.id}" data-amount="${(parseFloat(payment.amount) || 0).toFixed(2)}" data-transaction-id="${escapeHtml(payment.transaction_id || 'N/A')}">Edit</span> |
+                            <span class="delete-payment-btn" data-payment-id="${payment.id}" data-amount="${(parseFloat(payment.amount) || 0).toFixed(2)}" data-transaction-id="${escapeHtml(payment.transaction_id || 'N/A')}">Delete</span>
+                        </td>
+                    `;
+                    paymentsBody.append(paymentRow);
+                });
+                $('#previous_payments').show();
+                console.log('Showing previous payments');
+            } else {
+                paymentsBody.html('<tr><td colspan="5" class="text-center">No previous payments</td></tr>');
+                $('#previous_payments').show();
+                console.log('No previous payments found');
+            }
+
+            $('#payment_amount').prop('disabled', false).attr('max', (parseFloat(family.total_fees) || 0).toFixed(2));
+            $('#submit_payment').prop('disabled', false);
+            $('#parent_id').val(family.parent_id || '');
+            console.log('Family details rendered successfully');
+        } catch (e) {
+            console.error('Error rendering family:', e);
+            $('#family_table_body').html(`<tr><td colspan="4" class="text-center text-danger">Error rendering family details: ${escapeHtml(e.message)}</td></tr>`);
+        }
+    }
+
+    $(document).on('click', '.edit-payment-btn', function() {
+        const paymentId = $(this).data('payment-id');
+        const amount = $(this).data('amount');
+        const transactionId = $(this).data('transaction-id');
+        console.log('Edit payment clicked:', { paymentId, amount, transactionId });
+
+        $('#modal_transaction_id').text(transactionId);
+        $('#modal_current_amount').text(amount);
+        $('#modal_payment_amount').val(amount);
+        $('#modal_payment_amount_error').hide();
+        editingPaymentId = paymentId;
+
+        initializeModal();
+        safeModalShow('editPaymentModal');
+    });
+
+    $(document).on('click', '.delete-payment-btn', function() {
+        const paymentId = $(this).data('payment-id');
+        const amount = $(this).data('amount');
+        const transactionId = $(this).data('transaction-id');
+        console.log('Delete payment clicked:', { paymentId, amount, transactionId });
+
+        $('#delete_modal_transaction_id').text(transactionId);
+        $('#delete_modal_amount').text(amount);
+        deletingPaymentId = paymentId;
+
+        initializeModal();
+        safeModalShow('deletePaymentModal');
+    });
+
+    $(document).on('click', '.edit-fee-btn', function() {
+        const studentId = $(this).data('student-id');
+        const studentName = $(this).data('student-name');
+        const currentFee = $(this).data('fee');
+        console.log('Edit fee clicked:', { studentId, studentName, currentFee });
+
+        if (!studentId || studentId === 'undefined' || studentId === '') {
+            console.error('Invalid studentId:', studentId);
+            $('#message_container').html(`<div class="alert alert-danger">Invalid student ID for ${escapeHtml(studentName)}. Please contact support.</div>`);
+            setTimeout(() => $('#message_container').empty(), 5000);
+            return;
+        }
+
+        $('#modal_student_name').text(studentName);
+        $('#modal_current_fee').text(currentFee);
+        $('#modal_new_fee').val(currentFee);
+        $('#modal_new_fee_error').hide();
+        editingStudentId = studentId;
+
+        initializeModal();
+        safeModalShow('editFeeModal');
+    });
+
+    $('#confirm_edit_payment').on('click', function() {
+        const newAmount = parseFloat($('#modal_payment_amount').val()) || 0;
+        console.log('Confirm edit payment:', newAmount);
+        if (newAmount < 0) {
+            $('#modal_payment_amount').addClass('is-invalid');
+            $('#modal_payment_amount_error').text('Amount cannot be negative').show();
+            return;
+        }
+
+        $('#payment_amount').val(newAmount.toFixed(2));
+        $('#form_action').val('edit');
+        $('#payment_id').val(editingPaymentId);
+        $('#submit_payment').text('Update Payment');
+        $('#cancel_edit').show();
+        $('#editPaymentModal').modal('hide');
+    });
+
+    $('#confirm_delete_payment').on('click', function() {
+        console.log('Confirm delete payment:', deletingPaymentId);
+        $('#form_action').val('delete');
+        $('#payment_id').val(deletingPaymentId);
+        $('#payment_amount').val('0');
+        $('#payment_form').submit();
+        $('#deletePaymentModal').modal('hide');
+    });
+
+    $('#confirm_edit_fee').on('click', function() {
+        const newFee = parseFloat($('#modal_new_fee').val()) || 0;
+        const session_id = $('#session_id').val();
+        const term = $('#term').val();
+        console.log('Confirm edit fee:', { studentId: editingStudentId, newFee, session_id, term });
+
+        // Validate inputs
+        const missingFields = [];
+        if (!editingStudentId) missingFields.push('student_id');
+        if (!session_id) missingFields.push('session_id');
+        if (!term) missingFields.push('term');
+        if (!newFee && newFee !== 0) missingFields.push('new_amount');
+
+        if (missingFields.length > 0) {
+            console.error('Missing required fields:', missingFields);
+            $('#modal_new_fee').addClass('is-invalid');
+            $('#modal_new_fee_error').text(`Missing required fields: ${missingFields.join(', ')}`).show();
+            return;
+        }
+        if (newFee < 0) {
+            console.error('Negative fee amount:', newFee);
+            $('#modal_new_fee').addClass('is-invalid');
+            $('#modal_new_fee_error').text('Fee cannot be negative').show();
+            return;
+        }
+
+        const requestData = {
+            student_id: editingStudentId,
+            session_id: session_id,
+            term: term,
+            new_amount: newFee.toFixed(2)
+        };
+
+        $.ajax({
+            url: "{% url 'admin_edit_student_fee' %}",
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            data: requestData,
+            dataType: 'json',
+            beforeSend: function() {
+                console.log('Submitting fee edit request with data:', requestData);
+                $('#modal_new_fee_error').hide();
+                $('#modal_new_fee').removeClass('is-invalid');
+            },
+            success: function(data) {
+                console.log('Fee edit response:', data);
+                if (data.success) {
+                    $('#message_container').html(`<div class="alert alert-success">${escapeHtml(data.message)}</div>`);
+                    // Update selectedFamily with new fee and totals
+                    if (selectedFamily && data.updated_student) {
+                        const student = selectedFamily.students.find(s => s.student_id === data.updated_student.student_id);
+                        if (student) {
+                            student.fee_amount = data.updated_student.fee_amount;
+                        }
+                        selectedFamily.total_student_fees = data.total_student_fees;
+                        selectedFamily.pta_dues = data.pta_dues;
+                        selectedFamily.total_fees = data.total_fees;
+                        selectedFamily.amount_paid = data.amount_paid;
+                        selectedFamily.amount_due = data.amount_due;
+                        displayFamily(selectedFamily);
+                    }
+                    $('#editFeeModal').modal('hide');
+                    setTimeout(() => $('#message_container').empty(), 5000);
+                } else {
+                    console.error('Fee edit error:', data.error || 'Unknown error');
+                    $('#modal_new_fee').addClass('is-invalid');
+                    $('#modal_new_fee_error').text(escapeHtml(data.error || 'Failed to update fee')).show();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Fee edit AJAX error:', { status, error, responseText: xhr.responseText, statusCode: xhr.status });
+                let errorMsg = 'Failed to update fee';
+                if (xhr.status === 403) {
+                    errorMsg = 'Permission denied or invalid CSRF token';
+                } else if (xhr.status === 404) {
+                    errorMsg = 'Endpoint not found. Check URL configuration';
+                } else if (xhr.status === 500) {
+                    errorMsg = 'Server error. Check server logs for details';
+                } else if (status === 'parsererror') {
+                    errorMsg = 'Invalid server response. Expected JSON';
+                } else if (xhr.responseJSON && xhr.responseJSON.error) {
+                    errorMsg = xhr.responseJSON.error;
+                }
+                $('#modal_new_fee').addClass('is-invalid');
+                $('#modal_new_fee_error').text(escapeHtml(errorMsg)).show();
+            }
+        });
+    });
+
+    $('#cancel_edit').on('click', function() {
+        console.log('Cancel edit clicked');
+        $('#payment_amount').val('').removeClass('is-invalid');
+        $('#payment_amount_error').hide();
+        $('#submit_payment').text('Record Payment').prop('disabled', false);
+        $('#cancel_edit').hide();
+        $('#form_action').val('create');
+        $('#payment_id').val('');
+        editingPaymentId = null;
+        deletingPaymentId = null;
+        editingStudentId = null;
+    });
+
+    $('#payment_amount').on('input', function() {
+        const amount = parseFloat($(this).val()) || 0;
+        console.log('Payment amount input:', amount);
+        if (!selectedFamily) return;
+
+        const maxDue = parseFloat(selectedFamily.total_fees) || 0;
+        if (amount < 0) {
+            $(this).addClass('is-invalid');
+            $('#payment_amount_error').text('Amount cannot be negative').show();
+            $('#submit_payment').prop('disabled', true);
+        } else if ($('#form_action').val() === 'create' && amount === 0) {
+            $(this).addClass('is-invalid');
+            $('#payment_amount_error').text('Amount must be greater than 0 for new payments').show();
+            $('#submit_payment').prop('disabled', true);
+        } else {
+            $(this).removeClass('is-invalid');
+            $('#payment_amount_error').hide();
+            $('#submit_payment').prop('disabled', false);
+        }
+
+        const currentPaid = parseFloat(selectedFamily.amount_paid) || 0;
+        const otherPayments = editingPaymentId ? (currentPaid - (parseFloat($('#modal_current_amount').text()) || 0)) : currentPaid;
+        $('#amount_due').text((maxDue - otherPayments - amount).toFixed(2));
+    });
+
+    $('#payment_form').on('submit', function(e) {
+        e.preventDefault();
+        const action = $('#form_action').val();
+        console.log('Form submitted:', { action });
+        if (action === 'create') {
+            const amount = parseFloat($('#payment_amount').val()) || 0;
+            if (amount <= 0) {
+                $('#payment_amount').addClass('is-invalid');
+                $('#payment_amount_error').text('Please enter a valid amount greater than 0.').show();
+                return;
+            }
+        }
+
+        const formData = $(this).serialize();
+        console.log('Form data:', formData);
+
+        $.ajax({
+            url: "{% url 'admin_create_payment' %}",
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            data: formData,
+            beforeSend: function() {
+                console.log('Submitting payment form');
+            },
+            success: function(data) {
+                console.log('Payment response:', data);
+                if (data.success) {
+                    $('#message_container').html(`<div class="alert alert-success">${escapeHtml(data.message)}</div>`);
+                    selectedFamily.total_student_fees = data.total_student_fees;
+                    selectedFamily.pta_dues = data.pta_dues;
+                    selectedFamily.total_fees = data.total_fees;
+                    selectedFamily.amount_paid = data.amount_paid;
+                    selectedFamily.amount_due = data.amount_due;
+                    selectedFamily.previous_payments = data.previous_payments;
+                    selectedFamily.is_first_term = data.is_first_term;
+                    displayFamily(selectedFamily);
+                    $('#payment_amount').val('').removeClass('is-invalid');
+                    $('#payment_amount_error').hide();
+                    $('#submit_payment').text('Record Payment').prop('disabled', false);
+                    $('#cancel_edit').hide();
+                    $('#form_action').val('create');
+                    $('#payment_id').val('');
+                    editingPaymentId = null;
+                    deletingPaymentId = null;
+                    editingStudentId = null;
+                    setTimeout(() => $('#message_container').empty(), 5000);
+                } else {
+                    console.error('Payment error:', data.error);
+                    $('#message_container').html(`<div class="alert alert-danger">${escapeHtml(data.error)}</div>`);
+                    setTimeout(() => $('#message_container').empty(), 5000);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Payment AJAX error:', { status, error, response: xhr.responseJSON });
+                const errorMsg = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error : 'Failed to process payment';
+                $('#message_container').html(`<div class="alert alert-danger">${escapeHtml(errorMsg)}</div>`);
+                setTimeout(() => $('#message_container').empty(), 5000);
+            }
+        });
+    });
+
+    $('#session_id, #term').on('change', function() {
+        console.log('Session or term changed');
+        $('#student_search').val('').trigger('input');
+    });
+
+    $(document).ready(function() {
+        console.log('Document ready');
+        initializeModal();
+        if ($('#student_search').val()) {
+            $('#student_search').trigger('input');
+        }
+    });
+}
+
+checkJQuery();
+</script>
+{% endblock %}

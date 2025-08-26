@@ -1,0 +1,137 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+{% block content %}
+    <div class="hp-main-layout-content">
+        <div class="row mb-32 gy-32">
+            <div class="col-12">
+                <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                    <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0px; right: 0px;">
+                        <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                        <defs>
+                            <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#fff"></stop>
+                                <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="row">
+                        <div class="col-12">
+                            <h1 class="mb-0 hp-text-color-black-0">Register New Student</h1>
+                            <h4 class="mt-8 hp-text-color-black-0">Add a new student to the system</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="card hp-bg-color-dark-90 p-24">
+                    {% if form_errors %}
+                        <div class="alert alert-danger hp-p1-body">
+                            {% for error in form_errors %}
+                                {{ error }}<br>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} hp-p1-body">
+                            {% for message in messages %}
+                                {{ message }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <form method="POST" id="register_student_form" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="full_name" class="form-label hp-p1-body">Full Name</label>
+                                <input type="text" class="form-control bg-dark text-white" id="full_name" name="full_name" value="{{ form_data.full_name|default:'' }}" required>
+                                <div class="invalid-feedback">Please enter the full name.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="date_of_birth" class="form-label hp-p1-body">Date of Birth</label>
+                                <input type="date" class="form-control bg-dark text-white" id="date_of_birth" name="date_of_birth" value="{{ form_data.date_of_birth|default:'' }}" required>
+                                <div class="invalid-feedback">Please enter the date of birth.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="address" class="form-label hp-p1-body">Address</label>
+                                <textarea class="form-control bg-dark text-white" id="address" name="address" required>{{ form_data.address|default:'' }}</textarea>
+                                <div class="invalid-feedback">Please enter the address.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="parent_phone" class="form-label hp-p1-body">Parent Phone</label>
+                                <input type="text" class="form-control bg-dark text-white" id="parent_phone" name="parent_phone" value="{{ form_data.parent_phone|default:'' }}" required>
+                                <div class="invalid-feedback">Please enter a parent phone number.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="gender" class="form-label hp-p1-body">Gender</label>
+                                <select class="form-select bg-dark text-white" id="gender" name="gender" required>
+                                    <option value="">Select Gender</option>
+                                    {% for value, label in genders %}
+                                    <option value="{{ value }}" {% if value == form_data.gender %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a gender.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="enrollment_year" class="form-label hp-p1-body">Enrollment Year</label>
+                                <input type="number" class="form-control bg-dark text-white" id="enrollment_year" name="enrollment_year" value="{{ form_data.enrollment_year|default:'' }}" min="1900" max="{% now 'Y' %}" required>
+                                <div class="invalid-feedback">Please enter a valid enrollment year (e.g., 2023).</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="session" class="form-label hp-p1-body">Session</label>
+                                <select class="form-select bg-dark text-white" id="session" name="session" required>
+                                    <option value="">Select Session</option>
+                                    {% for session in sessions %}
+                                    <option value="{{ session.id }}" {% if session.id == form_data.session %}selected{% endif %}>{{ session.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a session.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="class_section" class="form-label hp-p1-body">Class Section</label>
+                                <select class="form-select bg-dark text-white" id="class_section" name="class_section" required>
+                                    <option value="">Select Class</option>
+                                    {% for section in class_sections %}
+                                    <option value="{{ section.id }}" {% if section.id == form_data.class_section %}selected{% endif %}>{{ section }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a class section.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="specialization" class="form-label hp-p1-body">Specialization (Senior only)</label>
+                                <select class="form-select bg-dark text-white" id="specialization" name="specialization">
+                                    <option value="">None</option>
+                                    {% for spec in specializations %}
+                                    <option value="{{ spec }}" {% if spec == form_data.specialization %}selected{% endif %}>{{ spec }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a specialization if applicable.</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="photo" class="form-label hp-p1-body">Photo (Optional)</label>
+                                <input type="file" class="form-control bg-dark text-white" id="photo" name="photo" accept="image/*">
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">Register Student</button>
+                            <a href="{% url 'admin_student_management' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#register_student_form').on('submit', function(e) {
+                let form = this;
+                if (form.checkValidity() === false) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                $(form).addClass('was-validated');
+            });
+        });
+    </script>
+{% endblock content %}

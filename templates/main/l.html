@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zxx">
+    <head>
+        {% load static %}
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="stylesheet" href="{% static 'main/css/bootstrap.min.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/magnific-popup.min.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/owl.carousel.min.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/owl.theme.default.min.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/meanmenu.min.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/scrollCue.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/all.min.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/style.css' %}">
+        <link rel="stylesheet" href="{% static 'main/css/responsive.css' %}">
+
+        <title>RISE :: Home</title>
+
+        <link rel="icon" type="image/png" href="{% static 'main/images/favicon.svg' %}">
+
+        <style>
+            .loader-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: radial-gradient(circle, rgba(40, 44, 52, 0.9), rgba(28, 28, 28, 0.95));
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                transition: opacity 0.5s ease;
+                overflow: hidden;
+            }
+
+            .loader-overlay.hidden {
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            .loader-overlay::before {
+                content: '';
+                position: absolute;
+                width: 150px;
+                height: 75px;
+                background: url("{% static 'main/images/logo.png' %}") no-repeat center;
+                background-size: contain;
+                opacity: 0.2;
+                animation: pulseLogo 3s ease-in-out infinite;
+            }
+
+            .loading-text {
+                color: #FFFFFF;
+                font-size: 18px;
+                font-family: Arial, sans-serif;
+                margin-top: 15px;
+                animation: pulseText 1.5s ease-in-out infinite;
+            }
+
+            .loadingspinner {
+                --square: min(40px, 4vw);
+                --offset: min(46px, 4.6vw);
+                --duration: 2.4s;
+                --delay: 0.3s;
+                --timing-function: ease-in-out;
+                --in-duration: 0.5s;
+                --in-delay: 0.15s;
+                --in-timing-function: ease-out;
+                width: calc(3 * var(--offset) + var(--square));
+                height: calc(2 * var(--offset) + var(--square));
+                padding: 0;
+                position: relative;
+            }
+
+            .loadingspinner div {
+                display: inline-block;
+                border: none;
+                border-radius: 6px;
+                width: var(--square);
+                height: var(--square);
+                position: absolute;
+                padding: 0;
+                margin: 0;
+                font-size: 6pt;
+                color: black;
+                box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+                transition: transform 0.2s ease;
+            }
+
+            .loader-overlay.hidden .loadingspinner div {
+                animation: scatter 0.5s ease-out forwards;
+            }
+
+            .loadingspinner div:hover {
+                transform: scale(1.1);
+            }
+
+            .loadingspinner #square1 {
+                background: linear-gradient(45deg, #FFFFFF, #F0F0F0);
+                left: calc(0 * var(--offset));
+                top: calc(0 * var(--offset));
+                animation: square1 var(--duration) var(--delay) var(--timing-function) infinite,
+                           squarefadein var(--in-duration) calc(1 * var(--in-delay)) var(--in-timing-function) both,
+                           rotateSquare 1s linear infinite;
+            }
+
+            .loadingspinner #square2 {
+                background: linear-gradient(45deg, #0000FF, #4682B4);
+                left: calc(0 * var(--offset));
+                top: calc(1 * var(--offset));
+                animation: square2 var(--duration) var(--delay) var(--timing-function) infinite,
+                           squarefadein var(--in-duration) calc(1.5 * var(--in-delay)) var(--in-timing-function) both;
+            }
+
+            .loadingspinner #square3 {
+                background: linear-gradient(45deg, #B0B0B0, #D3D3D3);
+                left: calc(1 * var(--offset));
+                top: calc(1 * var(--offset));
+                animation: square3 var(--duration) var(--delay) var(--timing-function) infinite,
+                           squarefadein var(--in-duration) calc(2 * var(--in-delay)) var(--in-timing-function) both,
+                           rotateSquare 1s linear infinite;
+            }
+
+            .loadingspinner #square4 {
+                background: linear-gradient(45deg, #008000, #32CD32);
+                left: calc(2 * var(--offset));
+                top: calc(1 * var(--offset));
+                animation: square4 var(--duration) var(--delay) var(--timing-function) infinite,
+                           squarefadein var(--in-duration) calc(2.5 * var(--in-delay)) var(--in-timing-function) both;
+            }
+
+            .loadingspinner #square5 {
+                background: linear-gradient(45deg, #90EE90, #ADFF2F);
+                left: calc(3 * var(--offset));
+                top: calc(1 * var(--offset));
+                animation: square5 var(--duration) var(--delay) var(--timing-function) infinite,
+                           squarefadein var(--in-duration) calc(3 * var(--in-delay)) var(--in-timing-function) both,
+                           rotateSquare 1s linear infinite;
+            }
+
+            @keyframes square1 {
+                0%      {left: calc(0 * var(--offset)); top: calc(0 * var(--offset));}
+                8.333%  {left: calc(0 * var(--offset)); top: calc(1 * var(--offset));}
+                100%    {left: calc(0 * var(--offset)); top: calc(1 * var(--offset));}
+            }
+
+            @keyframes square2 {
+                0%      {left: calc(0 * var(--offset)); top: calc(1 * var(--offset));}
+                8.333%  {left: calc(0 * var(--offset)); top: calc(2 * var(--offset));}
+                16.67%  {left: calc(1 * var(--offset)); top: calc(2 * var(--offset));}
+                25.00%  {left: calc(1 * var(--offset)); top: calc(1 * var(--offset));}
+                83.33%  {left: calc(1 * var(--offset)); top: calc(1 * var(--offset));}
+                91.67%  {left: calc(1 * var(--offset)); top: calc(0 * var(--offset));}
+                100%    {left: calc(0 * var(--offset)); top: calc(0 * var(--offset));}
+            }
+
+            @keyframes square3 {
+                0%,100% {left: calc(1 * var(--offset)); top: calc(1 * var(--offset));}
+                16.67%  {left: calc(1 * var(--offset)); top: calc(1 * var(--offset));}
+                25.00%  {left: calc(1 * var(--offset)); top: calc(0 * var(--offset));}
+                33.33%  {left: calc(2 * var(--offset)); top: calc(0 * var(--offset));}
+                41.67%  {left: calc(2 * var(--offset)); top: calc(1 * var(--offset));}
+                66.67%  {left: calc(2 * var(--offset)); top: calc(1 * var(--offset));}
+                75.00%  {left: calc(2 * var(--offset)); top: calc(2 * var(--offset));}
+                83.33%  {left: calc(1 * var(--offset)); top: calc(2 * var(--offset));}
+                91.67%  {left: calc(1 * var(--offset)); top: calc(1 * var(--offset));}
+            }
+
+            @keyframes square4 {
+                0%      {left: calc(2 * var(--offset)); top: calc(1 * var(--offset));}
+                33.33%  {left: calc(2 * var(--offset)); top: calc(1 * var(--offset));}
+                41.67%  {left: calc(2 * var(--offset)); top: calc(2 * var(--offset));}
+                50.00%  {left: calc(3 * var(--offset)); top: calc(2 * var(--offset));}
+                58.33%  {left: calc(3 * var(--offset)); top: calc(1 * var(--offset));}
+                100%    {left: calc(3 * var(--offset)); top: calc(1 * var(--offset));}
+            }
+
+            @keyframes square5 {
+                0%      {left: calc(3 * var(--offset)); top: calc(1 * var(--offset));}
+                50.00%  {left: calc(3 * var(--offset)); top: calc(1 * var(--offset));}
+                58.33%  {left: calc(3 * var(--offset)); top: calc(0 * var(--offset));}
+                66.67%  {left: calc(2 * var(--offset)); top: calc(0 * var(--offset));}
+                75.00%  {left: calc(2 * var(--offset)); top: calc(1 * var(--offset));}
+                100%    {left: calc(2 * var(--offset)); top: calc(1 * var(--offset));}
+            }
+
+            @keyframes squarefadein {
+                0%      {transform: scale(0.5); opacity: 0;}
+                100%    {transform: scale(1); opacity: 1;}
+            }
+
+            @keyframes rotateSquare {
+                0%      {transform: rotate(0deg);}
+                100%    {transform: rotate(360deg);}
+            }
+
+            @keyframes pulseLogo {
+                0%, 100% {transform: scale(1); opacity: 0.2;}
+                50%      {transform: scale(1.1); opacity: 0.3;}
+            }
+
+            @keyframes pulseText {
+                0%, 100% {opacity: 0.7;}
+                50%      {opacity: 1;}
+            }
+
+            @keyframes scatter {
+                0%      {transform: scale(1); opacity: 1;}
+                100%    {transform: translate(calc(100px * var(--scatter-x)), calc(100px * var(--scatter-y))) scale(0); opacity: 0;}
+            }
+
+            .loadingspinner #square1 { --scatter-x: -1; --scatter-y: -1; }
+            .loadingspinner #square2 { --scatter-x: 0; --scatter-y: 1; }
+            .loadingspinner #square3 { --scatter-x: 1; --scatter-y: 0; }
+            .loadingspinner #square4 { --scatter-x: 1; --scatter-y: 1; }
+            .loadingspinner #square5 { --scatter-x: -1; --scatter-y: 1; }
+
+            @media (max-width: 576px) {
+                .loadingspinner {
+                    --square: min(30px, 4vw);
+                    --offset: min(35px, 4.6vw);
+                }
+                .loader-overlay::before {
+                    width: 120px;
+                    height: 60px;
+                }
+                .loading-text {
+                    font-size: 16px;
+                    margin-top: 12px;
+                }
+            }
+        </style>
+    </head>
+    <body class="bg-1c1c1c">
+
+        <div class="loader-overlay" id="loader" aria-busy="true">
+            <div class="loadingspinner">
+                <div id="square1"></div>
+                <div id="square2"></div>
+                <div id="square3"></div>
+                <div id="square4"></div>
+                <div id="square5"></div>
+            </div>
+            <div class="loading-text">Loading...</div>
+        </div>
+
+        <div class="navbar-area white-navbar position-fixed top-0 start-0 end-0">
+            <div class="lanklub-responsive-nav">
+                <div class="container">
+                    <div class="lanklub-responsive-menu">
+                        <div class="logo">
+                            <a href="{% url 'index' %}">
+                                <img src="{% static 'main/images/logo.png' %}" alt="school logo" height="50" width="100">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="lanklub-nav">
+                <div class="container">
+                    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                        <a class="navbar-brand" href="{% url 'index' %}">
+                            <img src="{% static 'main/images/logo.png' %}" alt="school logo" height="50" width="100">
+                        </a>
+                        <div class="collapse navbar-collapse mean-menu">
+                            <ul class="navbar-nav mx-auto">
+                                <li class="nav-item">
+                                    <a href="{% url 'about_us' %}" class="nav-link">
+                                        About
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="javascript:void(0);" class="dropdown-toggle nav-link">
+                                        Academic Programs
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li class="nav-item">
+                                            <a href="{% url 'creche_info' %}" class="nav-link">
+                                                Crèche
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{% url 'nurseryandprimary_info' %}" class="nav-link">
+                                                Nursery / Primary
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{% url 'juniorsec_info' %}" class="nav-link">
+                                                Junior Secondary School
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{% url 'seniorsec_info' %}" class="nav-link">
+                                                Senior Secondary School
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'contact_us' %}" class="nav-link">
+                                        Contact
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'news' %}" class="nav-link">
+                                        News
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'gallery' %}" class="nav-link">
+                                        Gallery
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="others-option">
+                                <a href="{% url 'login' %}" class="default-btn" target="_blank">
+                                    School Portal
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        {% block content %} {% endblock content %}
+
+        <footer class="footer-area bg-282828">
+            <div class="container">
+                <div class="row" data-cues="fadeIn" data-group="footerContent">
+                    <div class="col-lg-4 col-md-12">
+                        <h2 class="mb-0 footer-title text-uppercase fw-semibold">
+                            Let’s Learn Together
+                        </h2>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="footer-socials text-center">
+                            <a href="#" target="_blank" class="d-block w-100 text-uppercase">
+                                FACEBOOK
+                            </a>
+                            <a href="#" target="_blank" class="d-block w-100 text-uppercase">
+                                TWITTER
+                            </a>
+                            <a href="#" target="_blank" class="d-block w-100 text-uppercase">
+                                LINKEDIN
+                            </a>
+                            <a href="#" target="_blank" class="d-block w-100 text-uppercase">
+                                INSTAGRAM
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="footer-widget">
+                            <p>
+                                Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the.
+                            </p>
+                            <a href="contact.html" class="default-btn">
+                                Let’s Talk
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bottom-area">
+                    <div class="row align-items-center">
+                        <div class="col-lg-5 col-md-12">
+                            <ul class="custom-links p-0 mb-0 list-unstyled">
+                                <li class="d-inline-block">
+                                    <a href="about.html">
+                                        Facilities and School Life
+                                    </a>
+                                </li>
+                                <li class="d-inline-block">
+                                    <a href="courses.html">
+                                        School Calendar
+                                    </a>
+                                </li>
+                                <li class="d-inline-block">
+                                    <a href="contact.html">
+                                        FAQ
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-2 col-md-12 text-lg-center">
+                            <a href="{% url 'index' %}" class="logo d-inline-block">
+                                <img src="{% static 'main/images/logo.png' %}" alt="school logo" height="50" width="100">
+                            </a>
+                        </div>
+                        <div class="col-lg-5 col-md-12 text-lg-end">
+                            <ul class="custom-links p-0 mb-0 list-unstyled">
+                                <li class="d-inline-block">
+                                    <a href="#">
+                                        Parent Resources
+                                    </a>
+                                </li>
+                                <li class="d-inline-block">
+                                    <a href="privacy-policy.html">
+                                        Careers
+                                    </a>
+                                </li>
+                                <li class="d-inline-block">
+                                    <a href="terms-conditions.html">
+                                        Privacy Policy
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="copyright text-center">
+                    <p>
+                        Copyright, RISE All Rights Reserved
+                    </p>
+                </div>
+            </div>
+        </footer>
+
+        <div class="go-top bg-white text-center rounded-circle position-fixed">
+            <i class="fa-solid fa-chevron-up"></i>
+        </div>
+
+        <script src="{% static 'main/js/jquery.min.js' %}"></script>
+        <script src="{% static 'main/js/bootstrap.bundle.min.js' %}"></script>
+        <script src="{% static 'main/js/magnific-popup.min.js' %}"></script>
+        <script src="{% static 'main/js/meanmenu.min.js' %}"></script>
+        <script src="{% static 'main/js/owl.carousel.min.js' %}"></script>
+        <script src="{% static 'main/js/scrollCue.min.js' %}"></script>
+        <script src="{% static 'main/js/custom.js' %}"></script>
+        <script src="{% static 'main/js/requirements.js' %}"></script>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const loader = document.getElementById('loader');
+                const minDisplayTime = 2000;
+                const startTime = Date.now();
+
+                window.addEventListener('load', function() {
+                    const elapsedTime = Date.now() - startTime;
+                    const remainingTime = minDisplayTime - elapsedTime;
+
+                    if (remainingTime > 0) {
+                        setTimeout(() => {
+                            loader.classList.add('hidden');
+                            setTimeout(() => {
+                                loader.style.display = 'none';
+                            }, 500);
+                        }, remainingTime);
+                    } else {
+                        loader.classList.add('hidden');
+                        setTimeout(() => {
+                            loader.style.display = 'none';
+                        }, 500);
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

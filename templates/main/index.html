@@ -1,0 +1,1209 @@
+{% extends 'main/base_generic.html' %}
+{% block title %} Home {% endblock title %}
+{% load static %}
+{% block content %} 
+
+<style>
+    .banner-carousel-container {
+        position: relative;
+        width: 100%;
+        height: 500px;
+        overflow: hidden;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        margin: 0 auto;
+        background: linear-gradient(135deg, #1a237e 0%, #3f51b5 100%);
+    }
+
+    .banner-carousel {
+        display: flex;
+        transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%;
+        width: 300%;
+    }
+
+    .banner-slide {
+        min-width: 33.333%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .banner-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.8s ease;
+        filter: brightness(0.9);
+    }
+
+    .banner-slide:hover img {
+        transform: scale(1.05);
+        filter: brightness(1.1);
+    }
+
+    .banner-slide::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+            135deg, 
+            rgba(26, 35, 126, 0.4) 0%, 
+            rgba(63, 81, 181, 0.3) 50%, 
+            rgba(92, 107, 192, 0.2) 100%
+        );
+        transition: opacity 0.5s ease;
+        z-index: 1;
+    }
+
+    .carousel-dots {
+        position: absolute;
+        bottom: 25px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 12px;
+        z-index: 3;
+    }
+
+    .carousel-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.4);
+        border: 2px solid rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+    }
+
+    .carousel-dot.active {
+        background: #ffffff;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+        transform: scale(1.2);
+    }
+
+    .carousel-dot:hover {
+        background: rgba(255, 255, 255, 0.8);
+        transform: scale(1.1);
+    }
+
+    .carousel-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(15px);
+        z-index: 3;
+    }
+
+    .carousel-arrow:hover {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .carousel-arrow.prev {
+        left: 25px;
+    }
+
+    .carousel-arrow.next {
+        right: 25px;
+    }
+
+    .carousel-arrow svg {
+        width: 20px;
+        height: 20px;
+        fill: white;
+        transition: transform 0.3s ease;
+    }
+
+    .carousel-arrow:hover svg {
+        transform: scale(1.1);
+    }
+
+    .carousel-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #4f46e5, #06b6d4, #10b981);
+        transition: width 0.3s ease;
+        z-index: 3;
+        border-radius: 2px 2px 0 0;
+    }
+
+    .slide-content {
+        position: absolute;
+        bottom: 60px;
+        left: 40px;
+        right: 40px;
+        color: white;
+        z-index: 2;
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .banner-slide.active .slide-content {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .slide-content h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .slide-content p {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin: 0;
+        text-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    .carousel-play-pause {
+        position: absolute;
+        top: 25px;
+        right: 25px;
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        z-index: 3;
+    }
+
+    .carousel-play-pause:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: scale(1.1);
+    }
+
+    .carousel-play-pause svg {
+        width: 16px;
+        height: 16px;
+        fill: white;
+    }
+
+    @media (max-width: 768px) {
+        .banner-carousel-container {
+            height: 350px;
+            border-radius: 15px;
+        }
+
+        .carousel-arrow {
+            width: 40px;
+            height: 40px;
+        }
+
+        .carousel-arrow.prev {
+            left: 15px;
+        }
+
+        .carousel-arrow.next {
+            right: 15px;
+        }
+
+        .slide-content {
+            bottom: 40px;
+            left: 20px;
+            right: 20px;
+        }
+
+        .slide-content h3 {
+            font-size: 1.2rem;
+        }
+
+        .slide-content p {
+            font-size: 0.9rem;
+        }
+
+        .carousel-dots {
+            bottom: 15px;
+            gap: 8px;
+        }
+
+        .carousel-dot {
+            width: 10px;
+            height: 10px;
+        }
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .banner-carousel-container {
+        animation: slideIn 0.8s ease-out;
+    }
+    
+</style>
+
+    <div class="banner-area position-relative z-1">
+        <div class="container">
+            <div class="banner-text">
+                <h1 class="text-uppercase" data-cues="slideInUp" data-group="bannerContent">
+                    <span class="d-block">
+                        Rehoboth 
+                    </span>
+                    <span class="d-block">
+                        International
+                    </span>
+                    <span class="d-block school-of-excellence">
+                        School of Excellence
+                    </span>
+                </h1>
+            </div>
+            
+            <div class="banner-carousel-container text-center" data-cue="slideInUp">
+                <div class="banner-carousel" id="bannerCarousel">
+    <div class="banner-slide active">
+        <img src="{% static 'main/images/banners/banner-1.png' %}" alt="Campus Excellence">
+        <div class="slide-content">
+            <h3>Academic Excellence</h3>
+            <p>Fostering creativity and critical thinking in every student</p>
+        </div>
+    </div>
+    <div class="banner-slide">
+        <img src="{% static 'main/images/banners/banner-2.png' %}" alt="STEM Innovation">
+        <div class="slide-content">
+            <h3>STEM Innovation</h3>
+            <p>Robotics, programming, and cutting-edge computer labs</p>
+        </div>
+    </div>
+    <div class="banner-slide">
+        <img src="{% static 'main/images/banners/banner-3.png' %}" alt="Future Leaders">
+        <div class="slide-content">
+            <h3>Future Leaders</h3>
+            <p>Preparing students for tomorrow's challenges</p>
+        </div>
+    </div>
+    <div class="banner-slide">
+        <img src="{% static 'main/images/banners/banner-4.png' %}" alt="Future Leaders">
+        <div class="slide-content">
+            <h3>Global Opportunities</h3>
+            <p>International curriculum preparing students worldwide</p>
+        </div>
+    </div>
+    <div class="banner-slide">
+        <img src="{% static 'main/images/banners/banner-5.png' %}" alt="Inclusive Excellence">
+        <div class="slide-content">
+            <h3>Inclusive Excellence</h3>
+            <p>Celebrating diversity in our global learning community</p>
+        </div>
+    </div>
+</div>
+                
+                <div class="carousel-arrow prev" id="prevBtn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                    </svg>
+                </div>
+                <div class="carousel-arrow next" id="nextBtn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                    </svg>
+                </div>
+                
+                <div class="carousel-dots">
+                    <div class="carousel-dot active" data-slide="0"></div>
+                    <div class="carousel-dot" data-slide="1"></div>
+                    <div class="carousel-dot" data-slide="2"></div>
+                    <div class="carousel-dot" data-slide="3"></div>
+                    <div class="carousel-dot" data-slide="4"></div>
+                </div>
+                
+                <div class="carousel-play-pause" id="playPauseBtn">
+                    <svg id="pauseIcon" viewBox="0 0 24 24">
+                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                    </svg>
+                    <svg id="playIcon" viewBox="0 0 24 24" style="display: none;">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </div>
+                
+                <div class="carousel-progress" id="progressBar"></div>
+            </div>
+            
+            <div class="banner-content">
+                <div class="row align-items-center" data-cues="slideInUp" data-group="bannerText">
+                    <div class="col-lg-6 col-md-8">
+                        <p>
+                            Nurturing young minds for tomorrow's challenges. At Rehoboth International School, we provide world-class education that combines academic excellence with character development and global awareness.
+                        </p>
+                        <div class="btn-box d-flex align-items-center">
+                            <a href="{% url 'contact_us' %}" class="default-btn">
+                                Get In Touch
+                            </a>
+                            <a href="#" class="video-btn popup-youtube fw-medium d-flex align-items-center">
+                                <span class="d-block text-center rounded-circle"  style="background-color: white;">
+                                    <img src="{% static 'main/images/icons/play.svg' %}" alt="play">
+                                </span>
+                                Watch Video
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-4">
+                        <div class="text-md-end">
+                            <a href="{% url 'about_us' %}" class="link-btn d-inline-block text-center rounded-circle fw-medium">
+                                <span class="d-block text-black">
+                                    About Us
+                                </span>
+                                <img src="{% static 'main/images/icons/diagonal-arrow-right-up.svg' %}" alt="diagonal-arrow-right-up">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="shape1">
+            <img src="{% static 'main/images/shapes/shape1.svg' %}" alt="shape1">
+        </div>
+        <div class="shape2">
+            <img src="{% static 'main/images/shapes/shape2.svg' %}" alt="shape2">
+        </div>
+    </div>
+    
+    <div class="mission-area pb-120">
+        <div class="container-fluid px-0">
+            <div class="row mx-0">
+                <div class="col-xl-8 col-md-12 px-0">
+                    <div class="mission-content">
+                        <div class="content">
+                            <h2 class="fw-semibold text-uppercase" data-cue="slideInUp">
+                                Our Mission: Educating Tomorrow's Leaders
+                            </h2>
+                            <div class="row" data-cues="slideInUp" data-group="missionContent">
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="box mb-25">
+                                        <div class="text d-flex align-items-center">
+                                            <div class="icon">
+                                                <img src="{% static 'main/images/icons/point.svg' %}" alt="point">
+                                            </div>
+                                            <div>
+                                                <span class="number d-block fw-semibold">
+                                                    98%
+                                                </span>
+                                                <span class="d-block">
+                                                    Graduation Rate
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="content">
+                                            <h3 class="fw-semibold">
+                                                Academic Excellence
+                                            </h3>
+                                            <p>
+                                                Our comprehensive curriculum and dedicated teachers ensure students achieve their highest potential through personalized learning approaches.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="box mb-25">
+                                        <div class="text d-flex align-items-center">
+                                            <div class="icon">
+                                                <img src="{% static 'main/images/icons/point2.svg' %}" alt="point2">
+                                            </div>
+                                            <div>
+                                                <span class="number d-block fw-semibold">
+                                                    10+
+                                                </span>
+                                                <span class="d-block">
+                                                    Years Experience 
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="content">
+                                            <h3 class="fw-semibold">
+                                                Quality Education
+                                            </h3>
+                                            <p>
+                                                With over 15 years of educational excellence, we've perfected our teaching methodologies to deliver unparalleled learning experiences.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="box mb-25">
+                                        <div class="text d-flex align-items-center">
+                                            <div class="icon">
+                                                <img src="{% static 'main/images/icons/point3.svg' %}" alt="point3">
+                                            </div>
+                                            <div>
+                                                <span class="number d-block fw-semibold">
+                                                    25+
+                                                </span>
+                                                <span class="d-block">
+                                                    Extracurriculars
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="content">
+                                            <h3 class="fw-semibold">
+                                                Holistic Development
+                                            </h3>
+                                            <p>
+                                                We offer diverse activities from sports to arts, music to technology, ensuring well-rounded development beyond academics.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-6">
+                                    <div class="box mb-25">
+                                        <div class="text d-flex align-items-center">
+                                            <div class="icon">
+                                                <img src="{% static 'main/images/icons/point4.svg' %}" alt="point4">
+                                            </div>
+                                            <div>
+                                                <span class="number d-block fw-semibold">
+                                                    100%
+                                                </span>
+                                                <span class="d-block">
+                                                    University Placement
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="content">
+                                            <h3 class="fw-semibold">
+                                                Future Ready
+                                            </h3>
+                                            <p>
+                                                Our graduates consistently gain admission to prestigious universities worldwide with impressive scholarships and recognitions.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-md-12 px-0">
+                    <div class="mission-image">
+                        {% if home.mission_image %}
+                            <img src="{{ home.mission_image.url }}" alt="school campus">
+                        {% else %}
+                            <img src="{% static 'main/images/mis.jpeg' %}" alt="school campus">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="courses-area pt-120 pb-95" id="programs">
+        <div class="container">
+            <div class="section-title mb-40 text-center">
+                <h2 class="fw-semibold fs-32 mx-auto mb-0 text-uppercase">
+                    Our Academic Programs 
+                </h2>
+            </div>
+            <div class="courses-list mx-auto">
+                <div class="row" data-cues="slideInUp" data-group="coursesContent">
+                    <div class="col-lg-6 col-md-6" id="nursery">
+                        <div class="course-item mb-25">
+                            <div class="d-flex align-items-center">
+                                <img width="48" height="48" src="https://img.icons8.com/color-glass/48/day-care.png" alt="day-care"/>
+                                <h3 class="mb-0 fw-semibold">
+                                    Crèche
+                                </h3>
+                            </div>
+                            <p>
+                                Our loving and stimulating crèche program for ages 0-2 focuses on foundational development, sensory exploration, and early socialization in a safe, nurturing environment. Qualified caregivers ensure your little one's earliest educational experiences are positive and enriching.
+                            </p>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="info d-flex align-items-center">
+                                    <div class="me-4">
+                                        <h4 class="fw-medium">
+                                            Age Range:
+                                        </h4>
+                                        <span class="d-block">
+                                            0-2 years
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h4 class="fw-medium">
+                                            Termly Fees:
+                                        </h4>
+                                        <span class="d-block">
+                                            35,000 CFA
+                                        </span>
+                                    </div>
+                                </div>
+                                <a href="{% url 'creche_info' %}" class="link-btn d-inline-block">
+                                    <img src="{% static 'main/images/icons/arrow-right.svg' %}" alt="arrow-right">
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6" id="primary">
+                        <div class="course-item mb-25">
+                            <div class="d-flex align-items-center">
+                                <img width="64" height="64" src="https://img.icons8.com/nolan/64/children.png" alt="children"/>
+                                <h3 class="mb-0 fw-semibold">
+                                    Nursery & Primary
+                                </h3>
+                            </div>
+                            <p>
+                                Our comprehensive nursery (ages 3-5) and primary (ages 6-11) programs build strong academic foundations with emphasis on literacy, numeracy, and critical thinking. Through play-based learning transitioning to structured academics, children discover their potential in a supportive environment.
+                            </p>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="info d-flex align-items-center">
+                                    <div class="me-4">
+                                        <h4 class="fw-medium">
+                                            Age Range:
+                                        </h4>
+                                        <span class="d-block">
+                                            3-11 years
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h4 class="fw-medium">
+                                            Termly Fees:
+                                        </h4>
+                                        <span class="d-block">
+                                            37,000 CFA
+                                        </span>
+                                    </div>
+                                </div>
+                                <a href="{% url 'nurseryandprimary_info' %}" class="link-btn d-inline-block">
+                                    <img src="{% static 'main/images/icons/arrow-right.svg' %}" alt="arrow-right">
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6" id="junior">
+                        <div class="course-item mb-25">
+                            <div class="d-flex align-items-center">
+                                <img width="48" height="48" src="https://img.icons8.com/doodle/48/books.png" alt="books"/>
+                                <h3 class="mb-0 fw-semibold">
+                                    Junior Secondary
+                                </h3>
+                            </div>
+                            <p>
+                                For ages 12-14, our comprehensive junior secondary program offers a broad curriculum that prepares students for the Basic Education Certificate Examination (BECE). Our experienced teachers provide specialized coaching to ensure JSS3 students excel in this important academic milestone with outstanding results.
+                            </p>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="info d-flex align-items-center">
+                                    <div class="me-4">
+                                        <h4 class="fw-medium">
+                                            Age Range:
+                                        </h4>
+                                        <span class="d-block">
+                                            12-14 years
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h4 class="fw-medium">
+                                            Termly Fees:
+                                        </h4>
+                                        <span class="d-block">
+                                            58,000 CFA
+                                        </span>
+                                    </div>
+                                </div>
+                                <a href="{% url 'juniorsec_info' %}" class="link-btn d-inline-block">
+                                    <img src="{% static 'main/images/icons/arrow-right.svg' %}" alt="arrow-right">
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-6" id="senior">
+                        <div class="course-item mb-25">
+                            <div class="d-flex align-items-center">
+                                <img width="64" height="64" src="https://img.icons8.com/cotton/64/contract--v1.png" alt="contract--v1"/>
+                                <h3 class="mb-0 fw-semibold">
+                                    Senior Secondary
+                                </h3>
+                            </div>
+                            <p>
+                                Our senior program offers specialized tracks in sciences, arts, and commerce with intensive preparation for the West African Senior School Certificate Examination (WASSCE/WAEC). With a consistent record of outstanding results and university placements, our graduates excel academically and are prepared for global opportunities.
+                            </p>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="info d-flex align-items-center">
+                                    <div class="me-4">
+                                        <h4 class="fw-medium">
+                                            Age Range:
+                                        </h4>
+                                        <span class="d-block">
+                                            15-18 years
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <h4 class="fw-medium">
+                                            Termly Fees:
+                                        </h4>
+                                        <span class="d-block">
+                                            58,000 CFA
+                                        </span>
+                                    </div>
+                                </div>
+                                <a href="{% url 'seniorsec_info' %}" class="link-btn d-inline-block">
+                                    <img src="{% static 'main/images/icons/arrow-right.svg' %}" alt="arrow-right">
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="why-lanklub-area overflow-hidden ptb-120 bg-282828">
+        <div class="container-fluid px-0">
+            <div class="row align-items-center mx-0" data-cues="slideInUp" data-group="whyLanklubContent">
+                <div class="col-lg-4 col-md-12 px-0">
+                    <div class="why-lanklub-image position-relative">
+                        <div class="content">
+                            <div class="text lh-2 text-uppercase fw-bold" style="color: black;">
+                                international
+                            </div>
+                        </div>
+                        <div class="image position-relative">
+                            {% if home.why_rise_image %}
+                                <img src="{{ home.why_rise_image.url }}" alt="why-rise-image">
+                            {% else %}
+                                <img src="{% static 'main/images/why-lanklub.jpg' %}" alt="why-rise-image">
+                            {% endif %}
+                            <a href="https://www.youtube.com/watch?v=vn9B2hH4G_E" class="video-btn popup-youtube rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="fa-solid fa-play"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8 col-md-12 px-0">
+                    <div class="why-lanklub-content">
+                        <h2 class="fw-semibold text-uppercase">
+                            Why RISE? Exceptional Education, Outstanding Results
+                        </h2>
+                        <p>
+                            At RISE, we believe in providing a comprehensive educational experience that nurtures both academic excellence and character development. Our unique approach combines rigorous academics with creative expression, technological innovation, and cultural awareness to prepare students for success in our increasingly interconnected world.
+                        </p>
+                        <div class="features-list">
+                            <div class="row">
+                                <div class="col-lg-5 col-md-6">
+                                    <div class="box d-flex align-items-center">
+                                        <div class="icon d-flex align-items-center justify-content-center">
+                                            <img width="64" height="64" src="https://img.icons8.com/external-flaticons-flat-flat-icons/64/external-faculty-university-flaticons-flat-flat-icons-3.png" alt="external-faculty-university-flaticons-flat-flat-icons-3"/>
+                                        </div>
+                                        <div>
+                                            <h3 class="fw-medium">
+                                                Expert Faculty
+                                            </h3>
+                                            <p>
+                                                Highly qualified teachers with international experience and specialized certifications in their respective fields.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-5 col-md-6">
+                                    <div class="box d-flex align-items-center">
+                                        <div class="icon d-flex align-items-center justify-content-center">
+                                            <img width="66" height="66" src="https://img.icons8.com/external-smashingstocks-flat-smashing-stocks/66/external-Stem-Education-smooth-conceptual-smashingstocks-flat-smashing-stocks.png" alt="external-Stem-Education-smooth-conceptual-smashingstocks-flat-smashing-stocks"/>
+                                        </div>
+                                        <div>
+                                            <h3 class="fw-medium">
+                                                STEM Education
+                                            </h3>
+                                            <p>
+                                                Innovative curriculum integrating Science, Technology, Engineering and Mathematics to develop future innovators and problem-solvers.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-5 col-md-6">
+                                    <div class="box d-flex align-items-center">
+                                        <div class="icon d-flex align-items-center justify-content-center">
+                                            <img width="32" height="32" src="https://img.icons8.com/windows/32/women-s-portal--v1.png" alt="women-s-portal--v1"/>
+                                        </div>
+                                        <div>
+                                            <h3 class="fw-medium">
+                                                School Portal
+                                            </h3>
+                                            <p>
+                                                Advanced digital management system providing parents real-time updates on student progress, assignments, and activities.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-5 col-md-6">
+                                    <div class="box d-flex align-items-center">
+                                        <div class="icon d-flex align-items-center justify-content-center">
+                                            <img width="64" height="64" src="https://img.icons8.com/external-flaticons-lineal-color-flat-icons/64/external-weekly-calendar-running-flaticons-lineal-color-flat-icons.png" alt="external-weekly-calendar-running-flaticons-lineal-color-flat-icons"/>
+                                        </div>
+                                        <div>
+                                            <h3 class="fw-medium">
+                                                Weekly Activities
+                                            </h3>
+                                            <p>
+                                                Engaging programs including Friday Home Class Days, Sports Wednesdays, and various themed learning experiences.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p>
+                            Our balanced approach ensures students not only achieve academic excellence but also develop crucial life skills through structured activities and events. From STEM competitions to sports days, cultural festivals to community service projects, we create well-rounded individuals prepared for future success in any field they choose to pursue.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cta-area bg-color">
+        <div class="container-fluid px-0">
+            <div class="row mx-0">
+                <div class="col-lg-6 col-md-12 px-0">
+                    <div class="cta-content-two position-relative" data-cues="slideInUp" data-group="ctaContent">
+                        <h2 class="mb-0 fw-semibold text-uppercase">
+                            Transform Your Child's Future Today
+                        </h2>
+                        <a href="{% url 'contact_us' %}" class="link-btn d-inline-block text-center rounded-circle fw-medium">
+                            <span class="d-block">
+                                Contact Us
+                            </span>
+                            <img src="{% static 'main/images/icons/diagonal-arrow-right-up.svg' %}" alt="diagonal-arrow-right-up">
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-12 px-0">
+                    <div class="cta-image-two">
+                        {% if home.cta_image %}
+                            <img src="{{ home.cta_image.url }}" alt="cta-image">
+                        {% else %}
+                            <img src="{% static 'main/images/cta2.jpg' %}" alt="cta-image">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="contact-area pb-120">
+        <div class="container">
+            <div class="row align-items-center" data-cues="slideInUp" data-group="contactContent">
+                <div class="col-lg-6 col-md-12">
+                    <div class="contact-form-content">
+                        <h2 class="fw-semibold text-uppercase">
+                            Learning Begins Here
+                        </h2>
+                        <div class="box d-md-flex align-items-center">
+                            <div class="icon rounded-circle d-flex align-items-center justify-content-center">
+                                <img src="{% static 'main/images/icons/white-phone.svg' %}" alt="phone">
+                            </div>
+                            <div>
+                                <h3 class="fw-medium">
+                                    Contact us
+                                </h3>
+                                <a href="tel:+22890165089" class="fw-semibold phone-number">
+                                    +228 90 16 50 89
+                                </a> 
+                                |
+                                <a href="tel:+22890016077" class="fw-semibold phone-number">
+                                    +228 90 01 60 77
+                                </a>
+                            </div>
+                        </div>
+                        <p>
+                            We're here to answer your questions about admissions, curriculum, facilities, and more. Whether you're considering Rehoboth International School for your child or simply want more information, our friendly staff is ready to assist you. Reach out today to schedule a campus tour or learn about upcoming enrollment opportunities.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-12">
+                    <div class="contact-form-box">
+                        <div class="form-group">
+                            <input type="text" class="form-control shadow-none" placeholder="Your Name">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control shadow-none" placeholder="Your Email Address">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control shadow-none" placeholder="Your Phone Number">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control shadow-none" placeholder="Write Subject">
+                        </div>
+                        <div class="form-group">
+                            <textarea class="form-control shadow-none" placeholder="Your Message..."></textarea>
+                        </div>
+                        <button type="submit" class="default-btn d-block w-100">
+                            Send Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="feedback-area ptb-120 position-relative z-1 bg-282828">
+        <div class="container">
+            <div class="section-title mb-40 text-center" data-cue="slideInUp">
+                <h2 class="fw-semibold fs-32 mx-auto mb-0 text-uppercase">
+                    What Our Community Says About Rehoboth
+                </h2>
+            </div>
+            <div class="feedback-slides2 owl-theme owl-carousel mx-auto" data-cue="slideInUp">
+                {% for testimonial in testimonials %}
+                    <div class="single-feedback-box">
+                        <div class="row align-items-center">
+                            <div class="col-lg-5 col-md-5">
+                                <div class="image text-center">
+                                    {% if testimonial.image %}
+                                        <img src="{{ testimonial.image.url }}" alt="{{ testimonial.name }}-image">
+                                    {% else %}
+                                        <img src="{% static 'main/images/subtract.png' %}" alt="subtract-image">
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-lg-7 col-md-7">
+                                <div class="content">
+                                    <h3 class="fw-semibold">
+                                        {{ testimonial.name }}
+                                    </h3>
+                                    <span class="d-block designation">
+                                        {{ testimonial.designation }}
+                                    </span>
+                                    <div class="ratings">
+                                        <img src="{% static 'main/images/icons/stars-5-1.svg' %}" alt="stars-5-1">
+                                    </div>
+                                    <p>
+                                        {{ testimonial.content }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>No testimonials available.</p>
+                {% endfor %}
+            </div>
+            <div class="feedback-users-list" data-cues="slideInUp" data-group="feedbackContent">
+                {% for testimonial in testimonials %}
+                    {% if testimonial.image %}
+                        <img src="{{ testimonial.image.url }}" class="rounded-circle" alt="{{ testimonial.name }}-image">
+                    {% else %}
+                        <img src="{% static 'main/images/subtract.png' %}" class="rounded-circle" alt="default-user-image">
+                    {% endif %}
+                {% empty %}
+                    <p>No testimonial images available.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="blog-area pt-120 pb-95">
+        <div class="container">
+            <div class="section-title mb-40 position-relative">
+                <h2 class="fs-32 mb-0 fw-semibold text-uppercase">
+                    Latest School News & Updates
+                </h2>
+                <a href="{% url 'news_list' %}" class="default-btn">
+                    Explore All News
+                </a>
+            </div>
+            <div class="row justify-content-center" data-cues="slideInUp" data-group="blogContent">
+                {% for news_item in news %}
+                    <div class="col-lg-6 col-md-6">
+                        <div class="single-blog-post-item mb-25">
+                            <a href="{% url 'news_detail' slug=news_item.slug %}" class="image d-block">
+                                {% if news_item.image %}
+                                    <img src="{{ news_item.image.url }}" alt="blog-image">
+                                {% else %}
+                                    <img src="{% static 'main/images/blogs/blog13.jpg' %}" alt="blog-image">
+                                {% endif %}
+                            </a>
+                            <div class="content">
+                                <div class="info d-lg-flex align-items-center justify-content-between">
+                                    <ul class="p-0 mb-0 list-unstyled">
+                                        {% for category in news_item.category_list %}
+                                            <li class="position-relative d-inline-block">
+                                                <a href="{% url 'news_list' %}">{{ category.strip }}</a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                    <span class="d-block">
+                                        {{ news_item.read_time }}
+                                    </span>
+                                </div>
+                                <h3 class="fw-semibold mb-0">
+                                    <a href="{% url 'news_detail' slug=news_item.slug %}" class="image d-block">
+                                        {{ news_item.title }}
+                                    </a>
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>No news available.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const carousel = document.getElementById('bannerCarousel');
+    const slides = carousel.querySelectorAll('.banner-slide');
+    const dots = document.querySelectorAll('.carousel-dot');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const pauseIcon = document.getElementById('pauseIcon');
+    const playIcon = document.getElementById('playIcon');
+    const progressBar = document.getElementById('progressBar');
+    
+    let currentSlide = 0;
+    let isAutoPlaying = true;
+    let autoPlayInterval;
+    let progressInterval;
+    const slideInterval = 5000; // 5 seconds
+    
+    function init() {
+        updateCarousel();
+        startAutoPlay();
+        addEventListeners();
+    }
+    
+    function updateCarousel() {
+        carousel.style.transform = `translateX(-${currentSlide * 33.333}%)`;
+        
+        slides.forEach((slide, index) => {
+            slide.classList.toggle('active', index === currentSlide);
+        });
+        
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentSlide);
+        });
+        
+        resetProgressBar();
+        if (isAutoPlaying) {
+            startProgressBar();
+        }
+    }
+    
+    function goToSlide(index) {
+        currentSlide = index;
+        updateCarousel();
+    }
+    
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % slides.length;
+        updateCarousel();
+    }
+    
+    function prevSlide() {
+        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+        updateCarousel();
+    }
+    
+    function startAutoPlay() {
+        if (isAutoPlaying) {
+            autoPlayInterval = setInterval(nextSlide, slideInterval);
+        }
+    }
+    
+    function stopAutoPlay() {
+        clearInterval(autoPlayInterval);
+        clearInterval(progressInterval);
+    }
+    
+    function toggleAutoPlay() {
+        isAutoPlaying = !isAutoPlaying;
+        
+        if (isAutoPlaying) {
+            pauseIcon.style.display = 'block';
+            playIcon.style.display = 'none';
+            startAutoPlay();
+            startProgressBar();
+        } else {
+            pauseIcon.style.display = 'none';
+            playIcon.style.display = 'block';
+            stopAutoPlay();
+            resetProgressBar();
+        }
+    }
+    
+    function startProgressBar() {
+        let progress = 0;
+        const increment = 100 / (slideInterval / 50); // Update every 50ms
+        
+        progressInterval = setInterval(() => {
+            progress += increment;
+            progressBar.style.width = `${progress}%`;
+            
+            if (progress >= 100) {
+                clearInterval(progressInterval);
+            }
+        }, 50);
+    }
+    
+    function resetProgressBar() {
+        clearInterval(progressInterval);
+        progressBar.style.width = '0%';
+    }
+    
+    function addEventListeners() {
+        prevBtn.addEventListener('click', () => {
+            stopAutoPlay();
+            prevSlide();
+            if (isAutoPlaying) {
+                setTimeout(startAutoPlay, 1000);
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            stopAutoPlay();
+            nextSlide();
+            if (isAutoPlaying) {
+                setTimeout(startAutoPlay, 1000);
+            }
+        });
+        
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                stopAutoPlay();
+                goToSlide(index);
+                if (isAutoPlaying) {
+                    setTimeout(startAutoPlay, 1000);
+                }
+            });
+        });
+        
+        playPauseBtn.addEventListener('click', toggleAutoPlay);
+        
+        carousel.addEventListener('mouseenter', () => {
+            if (isAutoPlaying) {
+                stopAutoPlay();
+            }
+        });
+        
+        carousel.addEventListener('mouseleave', () => {
+            if (isAutoPlaying) {
+                startAutoPlay();
+                startProgressBar();
+            }
+        });
+        
+        let startX = null;
+        let startY = null;
+        
+        carousel.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        });
+        
+        carousel.addEventListener('touchmove', (e) => {
+            if (!startX || !startY) return;
+            
+            let diffX = startX - e.touches[0].clientX;
+            let diffY = startY - e.touches[0].clientY;
+            
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                e.preventDefault();
+            }
+        });
+        
+        carousel.addEventListener('touchend', (e) => {
+            if (!startX || !startY) return;
+            
+            let endX = e.changedTouches[0].clientX;
+            let endY = e.changedTouches[0].clientY;
+            let diffX = startX - endX;
+            let diffY = startY - endY;
+            
+            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+                stopAutoPlay();
+                
+                if (diffX > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+                
+                if (isAutoPlaying) {
+                    setTimeout(startAutoPlay, 2000);
+                }
+            }
+            
+            startX = null;
+            startY = null;
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (carousel.matches(':hover') || document.activeElement === playPauseBtn) {
+                switch(e.key) {
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        stopAutoPlay();
+                        prevSlide();
+                        if (isAutoPlaying) setTimeout(startAutoPlay, 1000);
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        stopAutoPlay();
+                        nextSlide();
+                        if (isAutoPlaying) setTimeout(startAutoPlay, 1000);
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        toggleAutoPlay();
+                        break;
+                }
+            }
+        });
+    }
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                if (!autoPlayInterval && isAutoPlaying) {
+                    startAutoPlay();
+                    startProgressBar();
+                }
+            } else {
+                stopAutoPlay();
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    observer.observe(carousel);
+    
+    init();
+    
+    window.addEventListener('beforeunload', () => {
+        stopAutoPlay();
+        observer.disconnect();
+    });
+});
+</script>
+       
+{% endblock content %}

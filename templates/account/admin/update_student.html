@@ -1,0 +1,224 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0; right: 0;">
+                    <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                    <defs>
+                        <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fff"></stop>
+                            <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="row align-items-center">
+                    <div class="col-sm-8 col-12">
+                        <h1 class="mb-0 hp-text-color-black-0">Update Student: {{ student.full_name }}</h1>
+                        <h4 class="mt-8 hp-text-color-black-0">Modify student details</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24" style="border-radius: 16px;">
+                {% if messages %}
+                    <div class="alert alert-{% if messages.0.tags == 'error' %}danger{% else %}success{% endif %} hp-p1-body">
+                        {% for message in messages %}
+                            {{ message }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <form method="POST" id="update_student_form" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="first_name" class="form-label hp-p1-body">First Name</label>
+                            <input type="text" class="form-control bg-dark text-white" id="first_name" name="first_name" value="{{ student.first_name }}" required aria-required="true" aria-describedby="first_name_error">
+                            <div id="first_name_error" class="invalid-feedback">Please enter the first name.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="middle_name" class="form-label hp-p1-body">Middle Name (Optional)</label>
+                            <input type="text" class="form-control bg-dark text-white" id="middle_name" name="middle_name" value="{{ student.middle_name|default:'' }}" aria-describedby="middle_name_info">
+                            <div id="middle_name_info" class="form-text text-muted">Optional</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="surname" class="form-label hp-p1-body">Surname</label>
+                            <input type="text" class="form-control bg-dark text-white" id="surname" name="surname" value="{{ student.surname }}" required aria-required="true" aria-describedby="surname_error">
+                            <div id="surname_error" class="invalid-feedback">Please enter the surname.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="date_of_birth" class="form-label hp-p1-body">Date of Birth</label>
+                            <input type="date" class="form-control bg-dark text-white" id="date_of_birth" name="date_of_birth" value="{{ student.date_of_birth|date:'Y-m-d' }}" required aria-required="true" aria-describedby="date_of_birth_error">
+                            <div id="date_of_birth_error" class="invalid-feedback">Please enter a valid date of birth.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nationality" class="form-label hp-p1-body">Nationality</label>
+                            <input type="text" class="form-control bg-dark text-white" id="nationality" name="nationality" value="{{ student.nationality|default:'Nigeria' }}" required aria-required="true" aria-describedby="nationality_error">
+                            <div id="nationality_error" class="invalid-feedback">Please enter the nationality.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="address" class="form-label hp-p1-body">Address</label>
+                            <textarea class="form-control bg-dark text-white" id="address" name="address" required aria-required="true" aria-describedby="address_error">{{ student.address }}</textarea>
+                            <div id="address_error" class="invalid-feedback">Please enter the address.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="parent_phone" class="form-label hp-p1-body">Parent Phone (Optional)</label>
+                            <input type="text" class="form-control bg-dark text-white" id="parent_phone" name="parent_phone" value="{{ student.parent_phone|default:'' }}" aria-describedby="parent_phone_info parent_phone_error">
+                            <div id="parent_phone_info" class="form-text text-muted">Optional - enter a phone number to link with family members</div>
+                            <div id="parent_phone_error" class="invalid-feedback">Please enter a valid phone number (8-15 digits, optional +).</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="family_students" class="form-label hp-p1-body">Family Members (Students with Same Phone)</label>
+                            <select class="form-select bg-dark text-white" id="family_students" disabled aria-describedby="family_students_info">
+                                <option value="">No students found for this phone number</option>
+                            </select>
+                            <div id="family_students_info" class="form-text text-muted">Shows other students linked to the entered phone number</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="gender" class="form-label hp-p1-body">Gender</label>
+                            <select class="form-select bg-dark text-white" id="gender" name="gender" required aria-required="true" aria-describedby="gender_error">
+                                <option value="">Select Gender</option>
+                                {% for value, label in genders %}
+                                    <option value="{{ value }}" {% if value == student.gender %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <div id="gender_error" class="invalid-feedback">Please select a gender.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="enrollment_year" class="form-label hp-p1-body">Enrollment Year</label>
+                            <input type="number" class="form-control bg-dark text-white" id="enrollment_year" name="enrollment_year" value="{{ student.enrollment_year }}" min="1900" max="{% now 'Y' %}" required aria-required="true" aria-describedby="enrollment_year_error">
+                            <div id="enrollment_year_error" class="invalid-feedback">Please enter a valid enrollment year (e.g., 2023).</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="class" class="form-label hp-p1-body">Class</label>
+                            <select class="form-select bg-dark text-white" id="class" name="class" required aria-required="true" aria-describedby="class_error">
+                                <option value="">Select Class</option>
+                                {% for class in classes %}
+                                    <option value="{{ class.id }}" {% if class.id == student.current_class.id %}selected{% endif %}>{{ class.level }}</option>
+                                {% endfor %}
+                            </select>
+                            <div id="class_error" class="invalid-feedback">Please select a class.</div>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="photo" class="form-label hp-p1-body">Photo (Optional)</label>
+                            <input type="file" class="form-control bg-dark text-white" id="photo" name="photo" accept="image/*" aria-describedby="photo_info">
+                            <div id="photo_info" class="form-text text-muted">Upload a student photo if available.</div>
+                            {% if student.photo %}
+                                <div class="mt-2">
+                                    <img src="{{ student.photo.url }}" alt="Current photo" style="max-height: 100px;">
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if student.is_active %}checked{% endif %}>
+                                <label class="form-check-label hp-p1-body" for="is_active">
+                                    Active Student
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary me-2" aria-label="Update student details">Update Student</button>
+                        <a href="{% url 'admin_student_management' %}" class="btn btn-secondary" aria-label="Cancel update">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Load family students when parent_phone changes
+    $('#parent_phone').on('input', function() {
+        const phone = $(this).val().trim();
+        const familySelect = $('#family_students');
+        if (phone && /^\+?\d{8,15}$/.test(phone)) {
+            $.ajax({
+                url: '{% url "get_students_by_phone" %}',
+                data: {
+                    phone: phone,
+                    exclude_admission_number: '{{ student.admission_number }}'
+                },
+                success: function(data) {
+                    familySelect.empty();
+                    if (data.students.length === 0) {
+                        familySelect.append('<option value="">No students found for this phone number</option>');
+                    } else {
+                        familySelect.append('<option value="">Select a family member</option>');
+                        data.students.forEach(student => {
+                            familySelect.append(`<option value="${student.admission_number}">${student.full_name} (${student.admission_number})</option>`);
+                        });
+                    }
+                    familySelect.prop('disabled', data.students.length === 0);
+                },
+                error: function() {
+                    console.error('Failed to load family students');
+                    familySelect.empty().append('<option value="">Error loading students</option>').prop('disabled', true);
+                }
+            });
+        } else {
+            familySelect.empty().append('<option value="">No students found for this phone number</option>').prop('disabled', true);
+        }
+    });
+
+    // Trigger initial load if parent_phone has a value
+    if ($('#parent_phone').val()) {
+        $('#parent_phone').trigger('input');
+    }
+
+    // Form validation
+    $('#update_student_form').on('submit', function(e) {
+        let isValid = true;
+        const requiredFields = ['first_name', 'surname', 'date_of_birth', 'nationality', 'address', 'gender', 'enrollment_year', 'class'];
+
+        requiredFields.forEach(field => {
+            const input = $(`#${field}`);
+            if (!input.val()) {
+                input.addClass('is-invalid');
+                $(`#${field}_error`).show();
+                isValid = false;
+            } else {
+                input.removeClass('is-invalid');
+                $(`#${field}_error`).hide();
+            }
+        });
+
+        const enrollmentYear = $('#enrollment_year').val();
+        const currentYear = new Date().getFullYear();
+        if (enrollmentYear && (enrollmentYear < 1900 || enrollmentYear > currentYear)) {
+            $('#enrollment_year').addClass('is-invalid');
+            $('#enrollment_year_error').show();
+            isValid = false;
+        }
+
+        const parentPhone = $('#parent_phone').val();
+        if (parentPhone && !/^\+?\d{8,15}$/.test(parentPhone)) {
+            $('#parent_phone').addClass('is-invalid');
+            $('#parent_phone_error').show();
+            isValid = false;
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#update_student_form').addClass('was-validated');
+        }
+    });
+
+    $('#update_student_form input, #update_student_form select, #update_student_form textarea').on('input change', function() {
+        if ($(this).val()) {
+            $(this).removeClass('is-invalid');
+            $(`#${this.id}_error`).hide();
+        }
+    });
+});
+</script>
+{% endblock %}

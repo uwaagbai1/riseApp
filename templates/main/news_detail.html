@@ -1,0 +1,176 @@
+{% extends 'main/base_generic.html' %}
+{% block title %} School News - {{ news_item.title }} {% endblock title %}
+{% load static %}
+{% block content %}
+
+    <div class="page-banner-area text-center position-relative z-1">
+        <div class="container">
+            <h1 class="mb-0 text-white text-uppercase" data-cue="slideInUp">
+                News Details
+            </h1>
+        </div>
+    </div>
+
+    <div class="pb-120 border-bottom"></div>
+
+    <div class="blog-details-area bg-131313 ptb-120">
+        <div class="container" data-cues="slideInUp" data-group="blogDetailsContent">
+            <div class="blog-details-header">
+                <h2 class="fw-semibold">{{ news_item.title }}</h2>
+                <div class="d-md-flex align-items-center justify-content-between">
+                    <div class="user d-flex align-items-center">
+                        <img src="{% static 'main/images/rise-logo.jpeg' %}" class="rounded-circle" alt="user-image">
+                        <div>
+                            <h3 class="fw-semibold">Admin</h3>
+                            <h3 class="fw-semibold">
+                                {{ news_item.created_at|date:"d M Y" }} • {{ news_item.read_time }}
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="socials d-flex align-items-center">
+                        <span class="d-block">Share Post On:</span>
+                        <a href="#" class="d-inline-block position-relative rounded-circle text-center">
+                            <i class="fa-brands fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="d-inline-block position-relative rounded-circle text-center">
+                            <i class="fa-brands fa-x-twitter"></i>
+                        </a>
+                        <a href="#" class="d-inline-block position-relative rounded-circle text-center">
+                            <i class="fa-brands fa-linkedin-in"></i>
+                        </a>
+                        <a href="#" class="d-inline-block position-relative rounded-circle text-center">
+                            <i class="fa-brands fa-google"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="blog-details-image text-center">
+                {% if news_item.image %}
+                    <img src="{{ news_item.image.url }}" alt="{{ news_item.title }}-image">
+                {% else %}
+                    <img src="{% static 'main/images/blogs/blog-details.jpg' %}" alt="blog-details-image">
+                {% endif %}
+            </div>
+            <div class="row">
+                <div class="col-lg-8 col-md-12">
+                    <div class="blog-details-desc">
+                        {{ news_item.content|linebreaks }}
+                        <div class="info d-md-flex align-items-end justify-content-between">
+                            <div class="tags">
+                                {% for category in news_item.category_list %}
+                                    <h3><a class="d-inline-block">{{ category.strip }}</a></h3>
+                                {% empty %}
+                                    <h3><a class="d-inline-block">No categories</a></h3>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-12">
+                    <div class="blog-widgets-area">
+                        <div class="widget search-box">
+                            <form>
+                                <input type="text" class="form-control shadow-none" placeholder="Search here...">
+                                <button type="button" class="d-inline-block p-0 border-0 bg-transparent">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="widget post-category">
+                            <h3 class="fw-semibold widget-title">Post Category:</h3>
+                            <ul class="p-0 mb-0 list-unstyled">
+                                {% for news in news %}
+                                    {% for category in news.category_list %}
+                                        <li>
+                                            <a href="{% url 'news_list' %}" class="d-block w-100 position-relative">
+                                                {{ category.strip }}
+                                                <i class="fa-solid fa-chevron-right"></i>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                {% empty %}
+                                    <li>No categories available.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="widget recent-post">
+                            <h3 class="fw-semibold widget-title">Recent Post:</h3>
+                            <ul class="p-0 mb-0 list-unstyled">
+                                {% for recent_post in related_posts %}
+                                    <li class="d-flex align-items-center">
+                                        <a href="{% url 'news_detail' slug=recent_post.slug %}" class="image d-block">
+                                            {% if recent_post.image %}
+                                                <img src="{{ recent_post.image.url }}" alt="{{ recent_post.title }}-image">
+                                            {% else %}
+                                                <img src="{% static 'main/images/blogs/blog10.jpg' %}" alt="blog-image">
+                                            {% endif %}
+                                        </a>
+                                        <div>
+                                            <h4 class="fw-semibold">
+                                                <a href="{% url 'news_detail' slug=recent_post.slug %}">{{ recent_post.title }}</a>
+                                            </h4>
+                                            <span class="d-block">{{ recent_post.created_at|date:"d M, Y" }}</span>
+                                        </div>
+                                    </li>
+                                {% empty %}
+                                    <li>No recent posts available.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="blog-area border-top pt-120 pb-95">
+        <div class="container">
+            <div class="section-title mb-40 text-center">
+                <h2 class="fw-semibold mx-auto mb-0 text-uppercase">
+                    More News
+                </h2>
+            </div>
+            <div class="row" data-cues="slideInUp" data-group="blogContent">
+                {% for related_post in related_posts %}
+                    <div class="col-xl-4 col-md-6">
+                        <div class="single-blog-post mb-25">
+                            <a href="{% url 'news_detail' slug=related_post.slug %}" class="image d-block">
+                                {% if related_post.image %}
+                                    <img src="{{ related_post.image.url }}" alt="{{ related_post.title }}-image">
+                                {% else %}
+                                    <img src="{% static 'main/images/blogs/blog7.jpg' %}" alt="blog-image">
+                                {% endif %}
+                            </a>
+                            <div class="content">
+                                <div class="info position-relative">
+                                    <ul class="d-flex align-items-center p-0 mb-0 list-unstyled">
+                                        <li class="d-inline-block position-relative">
+                                            {{ related_post.created_at|date:"d" }} <br>{{ related_post.created_at|date:"M" }}
+                                        </li>
+                                        <li class="d-inline-block position-relative">
+                                            <i class="fa-regular fa-circle-user"></i> By
+                                            <a href="{% url 'news_list' %}">Admin</a>
+                                        </li>
+                                        <li class="d-inline-block position-relative">
+                                            <i class="fa-regular fa-comment-dots"></i>
+                                            <a href="{% url 'news_detail' slug=related_post.slug %}">Comments (05)</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <h3 class="fw-semibold">
+                                    <a href="{% url 'news_detail' slug=related_post.slug %}">{{ related_post.title }}</a>
+                                </h3>
+                                <div class="text-end">
+                                    <a href="{% url 'news_detail' slug=related_post.slug %}" class="default-btn">Continue Reading</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>No related posts available.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}

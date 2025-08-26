@@ -1,0 +1,91 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24" style="border-radius: 16px;">
+                <h2>Payment Details for {{ session.name|default:"N/A" }} - {{ term_name|default:"N/A" }}</h2>
+                <p class="hp-p1-body">Details of school fees for your family.</p>
+                
+                <div class="mb-24">
+                    <h4>Summary</h4>
+                    <p><strong>Total Fees:</strong> {{ total_fees|default:"0.00" }} XOF</p>
+                    <p><strong>Payment Status:</strong> {{ payment_status.status|default:"N/A" }}</p>
+                    <p><strong>Amount Paid:</strong> {{ payment_status.amount_paid|default:"0.00" }} XOF</p>
+                    <p><strong>Amount Due:</strong> {{ payment_status.amount_due|default:"0.00" }} XOF</p>
+                </div>
+                
+                <h4>Fees by Student</h4>
+                {% if student_fees %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Class</th>
+                                <th>Fee Amount (XOF)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fee in student_fees %}
+                            <tr>
+                                <td>{{ fee.student.full_name|default:"N/A" }}</td>
+                                <td>{{ fee.class_level|default:"N/A" }}</td>
+                                <td style="text-align: right;">{{ fee.fee_amount|default:"0.00" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3">No students registered for this term.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="hp-p1-body mt-16">No students registered for this term.</p>
+                {% endif %}
+                
+                <h4>Payment History</h4>
+                {% if payments %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Amount (XOF)</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.transaction_id|default:payment.id }}</td>
+                                <td style="text-align: right;">{{ payment.amount|default:"0.00" }}</td>
+                                <td>{{ payment.status|default:"N/A" }}</td>
+                                <td>{{ payment.created_at|date:"d M Y"|default:"N/A" }}</td>
+                                <td>
+                                    <a href="{% url 'generate_payment_receipt' payment.id %}" class="btn btn-sm btn-dark">Generate Receipt</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5">No payments recorded for this term.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="hp-p1-body mt-16">No payments recorded for this term.</p>
+                {% endif %}
+                
+                <a href="{% url 'parent_payments' %}" class="btn btn-dark mt-16">Back to Payments</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

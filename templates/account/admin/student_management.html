@@ -1,0 +1,576 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0; right: 0;">
+                    <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                    <defs>
+                        <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fff"></stop>
+                            <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="row align-items-center">
+                    <div class="col-sm-8 col-12">
+                        <h1 class="mb-0 hp-text-color-black-0">Student Management</h1>
+                        <h4 class="mt-8 hp-text-color-black-0">Manage student records and details</h4>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registerStudentModal" aria-label="Register a new student">
+                            <i class="bi bi-plus-lg me-2"></i>Register Student
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24" style="border-radius: 16px;">
+                <h3 class="mb-4">Student List</h3>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-sm-6">
+                        <label for="class_filter" class="form-label hp-p1-body">Class</label>
+                        <select class="form-select bg-dark text-white" id="class_filter">
+                            <option value="">All Classes</option>
+                            {% for class in classes %}
+                                <option value="{{ class.id }}">{{ class.level }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <label for="name_filter" class="form-label hp-p1-body">Name</label>
+                        <input type="text" class="form-control bg-dark text-white" id="name_filter" placeholder="Search by name">
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <label for="gender_filter" class="form-label hp-p1-body">Gender</label>
+                        <select class="form-select bg-dark text-white" id="gender_filter">
+                            <option value="">All Genders</option>
+                            {% for value, label in genders %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <label for="parent_phone_filter" class="form-label hp-p1-body">Parent Phone</label>
+                        <input type="text" class="form-control bg-dark text-white" id="parent_phone_filter" placeholder="Search by parent phone">
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover" id="student_table">
+                        <thead>
+                            <tr>
+                                <th>Surname</th>
+                                <th>First Name</th>
+                                <th>Middle Name</th>
+                                <th>Admission Number</th>
+                                <th>Class</th>
+                                <th>Section</th>
+                                <th>Gender</th>
+                                <th>Nationality</th>
+                                <th>Enrollment Year</th>
+                                <th>Parent Phone</th>
+                                <th>Active</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student_table_body">
+                            {% for student in students %}
+                            <tr>
+                                <td>{{ student.surname }}</td>
+                                <td>{{ student.first_name }}</td>
+                                <td>{{ student.middle_name|default:'N/A' }}</td>
+                                <td>{{ student.admission_number }}</td>
+                                <td>{{ student.current_class.level|default:'N/A' }}</td>
+                                <td>{{ student.current_section.suffix|default:'N/A' }}</td>
+                                <td>{{ student.get_gender_display }}</td>
+                                <td>{{ student.nationality }}</td>
+                                <td>{{ student.enrollment_year }}</td>
+                                <td>{{ student.parent_phone|default:'N/A' }}</td>
+                                <td>
+                                    <span class="badge {% if student.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ student.is_active|yesno:"Active,Inactive" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'student_detail' student.admission_number %}" class="btn btn-sm btn-dark me-2">View</a>
+                                    <a href="{% url 'update_student' student.admission_number %}" class="btn btn-sm btn-outline-primary me-2">Update</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="12" class="text-center">No students found</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center" id="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link bg-dark text-white" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+                            </li>
+                        {% endif %}
+                        {% for num in page_obj.paginator.page_range %}
+                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                <a class="page-link bg-dark text-white" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endfor %}
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link bg-dark text-white" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="registerStudentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content hp-bg-color-dark-90">
+            <div class="modal-header">
+                <h5 class="modal-title">Register New Student</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" id="register_student_form" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="family_type" id="existing_family" value="existing" checked>
+                            <label class="form-check-label" for="existing_family">
+                                Existing Family
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="family_type" id="new_family" value="new">
+                            <label class="form-check-label" for="new_family">
+                                New Family
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="existing_family_fields">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="parent_search" class="form-label">Search Parent/Student</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="parent_search" placeholder="Search by name, phone or admission number">
+                                    <button class="btn btn-primary" type="button" id="search_parent_btn">
+                                        <i class="bi bi-search"></i> Search
+                                    </button>
+                                </div>
+                                <div id="parent_search_results" class="mt-2 d-none">
+                                    <div class="list-group" id="parent_results_list"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="parent_phone_existing" class="form-label">Parent Phone</label>
+                                <input type="text" class="form-control" id="parent_phone_existing" name="parent_phone" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="new_family_fields" class="d-none">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="parent_full_name" class="form-label">Parent Full Name</label>
+                                <input type="text" class="form-control" id="parent_full_name" name="parent_full_name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="parent_phone_new" class="form-label">Parent Phone</label>
+                                <input type="text" class="form-control" id="parent_phone_new" name="parent_phone">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-4">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="middle_name" class="form-label">Middle Name</label>
+                            <input type="text" class="form-control" id="middle_name" name="middle_name">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="surname" class="form-label">Surname</label>
+                            <input type="text" class="form-control" id="surname" name="surname" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="date_of_birth" class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="gender" class="form-label">Gender</label>
+                            <select class="form-select" id="gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                {% for value, label in genders %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" name="address" required></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nationality" class="form-label">Nationality</label>
+                            <input type="text" class="form-control" id="nationality" name="nationality" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="enrollment_year" class="form-label">Enrollment Year</label>
+                            <input type="number" class="form-control" id="enrollment_year" name="enrollment_year" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="class" class="form-label">Class</label>
+                            <select class="form-select" id="class" name="class" required>
+                                <option value="">Select Class</option>
+                                {% for class in classes %}
+                                    <option value="{{ class.id }}">{{ class.level }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="photo" class="form-label">Photo</label>
+                            <input type="file" class="form-control" id="photo" name="photo">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus-fill me-2"></i>Register Student
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.toast {
+    max-width: 350px;
+    overflow: hidden;
+    font-size: 0.875rem;
+    background-clip: padding-box;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    opacity: 1;
+}
+
+.toast-header {
+    padding: 0.5rem 0.75rem;
+    color: #fff;
+    background-color: #198754;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.toast-body {
+    padding: 0.75rem;
+}
+
+.toast-header.bg-danger {
+    background-color: #dc3545;
+}
+
+.parent-result {
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.parent-result:hover {
+    background-color: #f8f9fa;
+}
+
+.parent-result i {
+    margin-right: 8px;
+}
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Debounce function to limit AJAX requests
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    // Function to filter students
+    function filterStudents(page = 1) {
+        const class_id = $('#class_filter').val();
+        const name = $('#name_filter').val();
+        const gender = $('#gender_filter').val();
+        const parent_phone = $('#parent_phone_filter').val();
+
+        console.log('Filtering with:', { class_id, name, gender, parent_phone, page });
+
+        $.ajax({
+            url: '{% url "filter_students" %}',
+            method: 'GET',
+            data: {
+                class_id: class_id,
+                name: name,
+                gender: gender,
+                parent_phone: parent_phone,
+                page: page
+            },
+            beforeSend: function() {
+                console.log('Sending AJAX request...');
+                $('#student_table_body').html('<tr><td colspan="12" class="text-center">Loading...</td></tr>');
+            },
+            success: function(response) {
+                console.log('Received response:', response);
+                let html = '';
+                if (response.error) {
+                    html = `<tr><td colspan="12" class="text-center">Error: ${response.error}</td></tr>`;
+                    showToast('Error', response.error, 'bg-danger');
+                } else if (response.students.length === 0) {
+                    html = '<tr><td colspan="12" class="text-center">No students found</td></tr>';
+                } else {
+                    response.students.forEach(student => {
+                        html += `
+                            <tr>
+                                <td>${student.surname}</td>
+                                <td>${student.first_name}</td>
+                                <td>${student.middle_name || 'N/A'}</td>
+                                <td>${student.admission_number}</td>
+                                <td>${student.current_class}</td>
+                                <td>${student.current_section || 'N/A'}</td>
+                                <td>${student.gender_display}</td>
+                                <td>${student.nationality}</td>
+                                <td>${student.enrollment_year}</td>
+                                <td>${student.parent_phone || 'N/A'}</td>
+                                <td>
+                                    <span class="badge ${student.is_active ? 'bg-success' : 'bg-danger'}">
+                                        ${student.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'student_detail' 0 %}".replace('0', student.admission_number) class="btn btn-sm btn-dark me-2">View</a>
+                                    <a href="{% url 'update_student' 0 %}".replace('0', student.admission_number) class="btn btn-sm btn-outline-primary me-2">Update</a>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+                $('#student_table_body').html(html);
+
+                // Update pagination
+                let paginationHtml = '';
+                if (response.has_previous) {
+                    paginationHtml += `<li class="page-item"><a class="page-link bg-dark text-white" href="#" data-page="${response.page - 1}">&laquo;</a></li>`;
+                }
+                for (let i = 1; i <= response.total_pages; i++) {
+                    paginationHtml += `
+                        <li class="page-item ${i === response.page ? 'active' : ''}">
+                            <a class="page-link bg-dark text-white" href="#" data-page="${i}">${i}</a>
+                        </li>
+                    `;
+                }
+                if (response.has_next) {
+                    paginationHtml += `<li class="page-item"><a class="page-link bg-dark text-white" href="#" data-page="${response.page + 1}">&raquo;</a></li>`;
+                }
+                $('#pagination').html(paginationHtml);
+            },
+            error: function(xhr) {
+                console.error('AJAX error:', xhr.status, xhr.responseText);
+                const errorMsg = xhr.responseJSON?.error || 'Failed to load students';
+                $('#student_table_body').html('<tr><td colspan="12" class="text-center">Error: ' + errorMsg + '</td></tr>');
+                showToast('Error', errorMsg, 'bg-danger');
+            }
+        });
+    }
+
+    // Toast notification function
+    function showToast(title, message, headerClass) {
+        const toastHTML = `
+            <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+                <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header ${headerClass} text-white">
+                        <strong class="me-auto">${title}</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                    <div class="toast-body">${message}</div>
+                </div>
+            </div>
+        `;
+        $('body').append(toastHTML);
+        setTimeout(() => $('.toast').toast('hide'), 5000);
+    }
+
+    // Filter event listeners
+    $('#class_filter, #gender_filter').on('change', function() {
+        console.log('Filter changed:', this.id, 'Value:', this.value);
+        filterStudents();
+    });
+    $('#name_filter, #parent_phone_filter').on('keyup', debounce(function() {
+        console.log('Keyup detected on:', this.id, 'Value:', this.value);
+        if ($(this).val().length >= 2 || $(this).val().length === 0) {
+            filterStudents();
+        }
+    }, 300));
+
+    // Pagination click handler
+    $(document).on('click', '#pagination .page-link', function(e) {
+        e.preventDefault();
+        const page = $(this).data('page');
+        if (page) {
+            filterStudents(page);
+        }
+    });
+
+    // Existing modal and form logic
+    $('input[name="family_type"]').change(function() {
+        if ($(this).val() === 'existing') {
+            $('#existing_family_fields').removeClass('d-none');
+            $('#new_family_fields').addClass('d-none');
+            $('#parent_phone_existing').val('');
+            $('#selected_parent_id').remove();
+        } else {
+            $('#existing_family_fields').addClass('d-none');
+            $('#new_family_fields').removeClass('d-none');
+            $('#parent_phone_new').val('');
+        }
+    });
+
+    $('#search_parent_btn').click(function() {
+        const query = $('#parent_search').val().trim();
+        if (query.length < 2) {
+            showToast('Warning', 'Please enter at least 2 characters', 'bg-warning');
+            return;
+        }
+
+        $.ajax({
+            url: '{% url "search_parents" %}',
+            method: 'GET',
+            data: { 
+                query: query,
+                include_students: true
+            },
+            beforeSend: function() {
+                $('#search_parent_btn').prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Searching...');
+            },
+            success: function(data) {
+                const resultsList = $('#parent_results_list').empty();
+                
+                if (data.parents.length === 0 && data.students.length === 0) {
+                    resultsList.append('<div class="list-group-item text-muted">No parents or students found matching "' + query + '"</div>');
+                } else {
+                    if (data.parents.length > 0) {
+                        resultsList.append('<div class="list-group-item list-group-item-secondary fw-bold">Parents</div>');
+                        data.parents.forEach(parent => {
+                            resultsList.append(`
+                                <button type="button" class="list-group-item list-group-item-action parent-result"
+                                    data-parent-id="${parent.id}"
+                                    data-parent-phone="${parent.phone_number}">
+                                    <i class="bi bi-person-fill me-2"></i>
+                                    ${parent.full_name} - ${parent.phone_number}
+                                    <span class="badge bg-primary ms-2">${parent.students_count} student(s)</span>
+                                </button>
+                            `);
+                        });
+                    }
+                    
+                    if (data.students.length > 0) {
+                        resultsList.append('<div class="list-group-item list-group-item-secondary fw-bold">Students</div>');
+                        data.students.forEach(student => {
+                            resultsList.append(`
+                                <button type="button" class="list-group-item list-group-item-action parent-result"
+                                    data-parent-id="${student.parent_id}"
+                                    data-parent-phone="${student.parent_phone}">
+                                    <i class="bi bi-person-vcard-fill me-2"></i>
+                                    ${student.full_name} (${student.admission_number})
+                                    <span class="badge bg-info ms-2">Parent: ${student.parent_name}</span>
+                                </button>
+                            `);
+                        });
+                    }
+                }
+                $('#parent_search_results').removeClass('d-none');
+            },
+            error: function(xhr) {
+                showToast('Error', xhr.responseJSON?.error || 'Error searching parents', 'bg-danger');
+            },
+            complete: function() {
+                $('#search_parent_btn').prop('disabled', false).html('<i class="bi bi-search"></i> Search');
+            }
+        });
+    });
+
+    $(document).on('click', '.parent-result', function() {
+        const parentPhone = $(this).data('parent-phone');
+        const parentId = $(this).data('parent-id');
+        
+        $('#parent_phone_existing').val(parentPhone);
+        $('#parent_search_results').addClass('d-none');
+        
+        $('#selected_parent_id').remove();
+        
+        if (parentId) {
+            $('<input>').attr({
+                type: 'hidden',
+                id: 'selected_parent_id',
+                name: 'selected_parent_id',
+                value: parentId
+            }).appendTo('#register_student_form');
+        }
+    });
+
+    $('#register_student_form').submit(function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        if ($('input[name="family_type"]:checked').val() === 'existing') {
+            formData.set('parent_phone', $('#parent_phone_existing').val());
+        } else {
+            formData.set('parent_phone', $('#parent_phone_new').val());
+        }
+
+        const submitBtn = $(this).find('button[type="submit"]');
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Registering...');
+
+        $.ajax({
+            url: '{% url "admin_student_management" %}',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                const successMsg = `Student registered successfully with admission number: ${response.admission_number}`;
+                showToast('Success', successMsg, 'bg-success');
+                
+                $('#register_student_form')[0].reset();
+                $('#registerStudentModal').modal('hide');
+                
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            },
+            error: function(xhr) {
+                let errorMsg = xhr.responseJSON?.error || 'Error registering student';
+                showToast('Error', errorMsg, 'bg-danger');
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false).html('<i class="bi bi-person-plus-fill me-2"></i>Register Student');
+            }
+        });
+    });
+
+    $(document).click(function(e) {
+        if (!$(e.target).closest('#parent_search_results, #parent_search, #search_parent_btn').length) {
+            $('#parent_search_results').addClass('d-none');
+        }
+    });
+});
+</script>
+{% endblock %}

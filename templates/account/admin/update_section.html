@@ -1,0 +1,85 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <h1 class="mb-0 hp-text-color-black-0">Manage Section: {{ section }}</h1>
+                <h4 class="mt-8 hp-text-color-black-0">{{ section.session.name }} Session</h4>
+            </div>
+        </div>
+        
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card hp-card-3 hp-border-1 mb-24">
+                            <div class="card-body">
+                                <h4>Section Information</h4>
+                                <div class="mb-3">
+                                    <strong>Class:</strong> {{ section.school_class.level }}
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Section:</strong> {{ section.suffix }}
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Session:</strong> {{ section.session.name }}
+                                </div>
+                                <div class="mb-3">
+                                    <strong>Status:</strong> 
+                                    <span class="badge {% if section.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ section.is_active|yesno:"Active,Inactive" }}
+                                    </span>
+                                </div>
+                                
+                                <form method="POST" class="mt-4">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="toggle_active">
+                                    <button type="submit" class="btn btn-{% if section.is_active %}danger{% else %}success{% endif %}">
+                                        {% if section.is_active %}Deactivate Section{% else %}Activate Section{% endif %}
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card hp-card-3 hp-border-1 mb-24">
+                            <div class="card-body">
+                                <h4>Assigned Teachers</h4>
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="update_teachers">
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Select Teachers</label>
+                                        <select class="form-select bg-dark text-white" name="teachers" multiple size="8">
+                                            {% for teacher in all_teachers %}
+                                                <option value="{{ teacher.id }}" 
+                                                    {% if teacher in assigned_teachers %}selected{% endif %}>
+                                                    {{ teacher.full_name }} ({{ teacher.school_email }})
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="text-muted">Hold CTRL/CMD to select multiple teachers</small>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-dark">Update Teachers</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{% url 'admin_manage_sections' %}" class="btn btn-transparent">
+                        <i class="ri-arrow-left-line"></i> Back to Sections
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

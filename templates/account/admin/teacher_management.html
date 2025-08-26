@@ -1,0 +1,367 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0; right: 0;">
+                    <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                    <defs>
+                        <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fff"></stop>
+                            <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="row align-items-center">
+                    <div class="col-sm-8 col-12">
+                        <h1 class="mb-0 hp-text-color-black-0">Teacher Management</h1>
+                        <h4 class="mt-8 hp-text-color-black-0">Manage teacher records and assignments</h4>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registerTeacherModal" aria-label="Register a new teacher">
+                            <i class="bi bi-plus-lg me-2"></i>Register Teacher
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card hp-bg-color-dark-90 p-24" style="border-radius: 16px;">
+                <h3 class="mb-4">Teacher List</h3>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-sm-6">
+                        <label for="nameFilter" class="form-label hp-p1-body">Name</label>
+                        <input type="text" id="nameFilter" class="form-control bg-dark text-white" placeholder="Search by name" value="{{ filter_name }}">
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <label for="emailFilter" class="form-label hp-p1-body">Email</label>
+                        <input type="text" id="emailFilter" class="form-control bg-dark text-white" placeholder="Search by email" value="{{ filter_email }}">
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <label for="genderFilter" class="form-label hp-p1-body">Gender</label>
+                        <select id="genderFilter" class="form-select bg-dark text-white">
+                            <option value="">All Genders</option>
+                            <option value="M" {% if filter_gender == 'M' %}selected{% endif %}>Male</option>
+                            <option value="F" {% if filter_gender == 'F' %}selected{% endif %}>Female</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <label for="activeFilter" class="form-label hp-p1-body">Status</label>
+                        <select id="activeFilter" class="form-select bg-dark text-white">
+                            <option value="">All Statuses</option>
+                            <option value="true" {% if filter_is_active == 'true' %}selected{% endif %}>Active</option>
+                            <option value="false" {% if filter_is_active == 'false' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Surname</th>
+                                <th>First Name</th>
+                                <th>Middle Name</th>
+                                <th>Email</th>
+                                <th>Gender</th>
+                                <th>Nationality</th>
+                                <th>Assigned Sections</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacherTableBody">
+                            {% for teacher in teachers %}
+                            <tr>
+                                <td>{{ teacher.surname }}</td>
+                                <td>{{ teacher.first_name }}</td>
+                                <td>{{ teacher.middle_name|default:'N/A' }}</td>
+                                <td>{{ teacher.school_email }}</td>
+                                <td>{{ teacher.get_gender_display }}</td>
+                                <td>{{ teacher.nationality }}</td>
+                                <td>
+                                    {% for section in teacher.current_sections %}
+                                        <span class="badge-enhanced completion">{{ section }}</span>
+                                    {% empty %}
+                                        <span class="text-muted">No sections assigned</span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <span class="badge {% if teacher.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ teacher.is_active|yesno:"Active,Inactive" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'assign_teacher_to_section' teacher.id %}" class="btn btn-sm btn-dark me-2" aria-label="Assign sections for {{ teacher.full_name }}">Assign</a>
+                                    <a href="#" class="btn btn-sm btn-outline-primary" aria-label="Edit details for {{ teacher.full_name }}">Edit</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="9" class="text-center">No teachers found</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center" id="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link bg-dark text-white" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous page">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% for num in page_obj.paginator.page_range %}
+                            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                                <a class="page-link bg-dark text-white" href="?page={{ num }}" aria-label="Page {{ num }}">{{ num }}</a>
+                            </li>
+                        {% endfor %}
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link bg-dark text-white" href="?page={{ page_obj.next_page_number }}" aria-label="Next page">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Register Teacher Modal -->
+<div class="modal fade" id="registerTeacherModal" tabindex="-1" aria-labelledby="registerTeacherModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content hp-bg-color-dark-90">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registerTeacherModalLabel">Register New Teacher</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if form_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form_errors %}
+                        {{ error }}<br>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <form method="POST" id="register_teacher_form" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control bg-dark text-white" id="first_name" name="first_name" value="{{ form_data.first_name|default:'' }}" required aria-required="true" aria-describedby="first_name_error">
+                            <div id="first_name_error" class="invalid-feedback">Please enter the first name.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="middle_name" class="form-label">Middle Name (Optional)</label>
+                            <input type="text" class="form-control bg-dark text-white" id="middle_name" name="middle_name" value="{{ form_data.middle_name|default:'' }}" aria-describedby="middle_name_info">
+                            <div id="middle_name_info" class="form-text text-muted">Optional</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="surname" class="form-label">Surname</label>
+                            <input type="text" class="form-control bg-dark text-white" id="surname" name="surname" value="{{ form_data.surname|default:'' }}" required aria-required="true" aria-describedby="surname_error">
+                            <div id="surname_error" class="invalid-feedback">Please enter the surname.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="school_email" class="form-label">School Email</label>
+                            <input type="email" class="form-control bg-dark text-white" id="school_email" name="school_email" value="{{ form_data.school_email|default:'' }}" required aria-required="true" aria-describedby="school_email_error">
+                            <div id="school_email_error" class="invalid-feedback">Please enter a valid email.</div>
+                            <small class="text-muted">This will be used as the teacher's username.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nationality" class="form-label">Nationality</label>
+                            <input type="text" class="form-control bg-dark text-white" id="nationality" name="nationality" value="{{ form_data.nationality|default:'Nigeria' }}" required aria-required="true" aria-describedby="nationality_error">
+                            <div id="nationality_error" class="invalid-feedback">Please enter the nationality.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="gender" class="form-label">Gender</label>
+                            <select class="form-select bg-dark text-white" id="gender" name="gender" required aria-required="true" aria-describedby="gender_error">
+                                <option value="">Select Gender</option>
+                                <option value="M" {% if form_data.gender == 'M' %}selected{% endif %}>Male</option>
+                                <option value="F" {% if form_data.gender == 'F' %}selected{% endif %}>Female</option>
+                            </select>
+                            <div id="gender_error" class="invalid-feedback">Please select a gender.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="photo" class="form-label">Photo (Optional)</label>
+                            <input type="file" class="form-control bg-dark text-white" id="photo" name="photo" accept="image/*" aria-describedby="photo_info">
+                            <div id="photo_info" class="form-text text-muted">Upload a teacher photo if available.</div>
+                        </div>
+                    </div>
+                    <div class="alert alert-dark mt-3">
+                        <strong>Note:</strong> A random password will be generated and displayed after registration.
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary me-2" aria-label="Register teacher">Register Teacher</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Cancel registration">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    function escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function updateTeacherTable(page=1) {
+        const name = $('#nameFilter').val();
+        const email = $('#emailFilter').val();
+        const gender = $('#genderFilter').val();
+        const isActive = $('#activeFilter').val();
+
+        $.ajax({
+            url: '{% url "filter_teachers" %}',
+            type: 'GET',
+            data: {
+                name: name,
+                email: email,
+                gender: gender,
+                is_active: isActive,
+                page: page
+            },
+            success: function(data) {
+                let html = '';
+                if (data.teachers && data.teachers.length > 0) {
+                    data.teachers.forEach(teacher => {
+                        html += `
+                            <tr>
+                                <td>${escapeHtml(teacher.surname)}</td>
+                                <td>${escapeHtml(teacher.first_name)}</td>
+                                <td>${escapeHtml(teacher.middle_name) || 'N/A'}</td>
+                                <td>${escapeHtml(teacher.school_email)}</td>
+                                <td>${escapeHtml(teacher.gender_display)}</td>
+                                <td>${escapeHtml(teacher.nationality)}</td>
+                                <td>
+                                    ${teacher.sections && teacher.sections.length > 0 ?
+                                        teacher.sections.map(s => `<span class="badge bg-secondary me-1">${escapeHtml(s)}</span>`).join('') :
+                                        '<span class="text-muted">No sections assigned</span>'}
+                                </td>
+                                <td>
+                                    <span class="badge ${teacher.is_active ? 'bg-success' : 'bg-danger'}">
+                                        ${teacher.is_active ? 'Active' : 'Inactive'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="/portal/admin/teacher/${teacher.id}/assign-sections/" class="btn btn-sm btn-dark me-2">Assign</a>
+                                    <a href="/portal/admin/teacher/${teacher.id}/edit/" class="btn btn-sm btn-outline-primary">Edit</a>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    html = '<tr><td colspan="9" class="text-center">No teachers found</td></tr>';
+                }
+                $('#teacherTableBody').html(html);
+
+                // Update pagination
+                let paginationHtml = '';
+                if (data.pagination) {
+                    if (data.pagination.has_previous) {
+                        paginationHtml += `
+                            <li class="page-item">
+                                <a class="page-link bg-dark text-white" href="#" data-page="${data.pagination.previous_page}" aria-label="Previous page">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        `;
+                    }
+                    for (let i = 1; i <= data.pagination.total_pages; i++) {
+                        paginationHtml += `
+                            <li class="page-item ${data.pagination.current_page === i ? 'active' : ''}">
+                                <a class="page-link bg-dark text-white" href="#" data-page="${i}" aria-label="Page ${i}">${i}</a>
+                            </li>
+                        `;
+                    }
+                    if (data.pagination.has_next) {
+                        paginationHtml += `
+                            <li class="page-item">
+                                <a class="page-link bg-dark text-white" href="#" data-page="${data.pagination.next_page}" aria-label="Next page">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        `;
+                    }
+                    $('#pagination').html(paginationHtml);
+                }
+            },
+            error: function(xhr) {
+                console.error('Error filtering teachers:', xhr.responseJSON?.error || 'Unknown error');
+            }
+        });
+    }
+
+    // Debounce filter inputs
+    let filterTimeout;
+    $('#nameFilter, #emailFilter').on('input', function() {
+        clearTimeout(filterTimeout);
+        filterTimeout = setTimeout(updateTeacherTable, 500);
+    });
+
+    $('#genderFilter, #activeFilter').on('change', function() {
+        updateTeacherTable();
+    });
+
+    // Handle pagination clicks
+    $(document).on('click', '.page-link', function(e) {
+        e.preventDefault();
+        const page = $(this).data('page');
+        updateTeacherTable(page);
+    });
+
+    // Form validation
+    $('#register_teacher_form').on('submit', function(e) {
+        let isValid = true;
+        const requiredFields = ['first_name', 'surname', 'school_email', 'gender', 'nationality'];
+
+        requiredFields.forEach(field => {
+            const input = $(`#${field}`);
+            if (!input.val()) {
+                input.addClass('is-invalid');
+                $(`#${field}_error`).show();
+                isValid = false;
+            } else {
+                input.removeClass('is-invalid');
+                $(`#${field}_error`).hide();
+            }
+        });
+
+        const email = $('#school_email').val();
+        if (email && !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+            $('#school_email').addClass('is-invalid');
+            $('#school_email_error').show();
+            isValid = false;
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            e.stopPropagation();
+            $('#register_teacher_form').addClass('was-validated');
+        }
+    });
+
+    $('#register_teacher_form input, #register_teacher_form select').on('input change', function() {
+        if ($(this).val()) {
+            $(this).removeClass('is-invalid');
+            $(`#${this.id}_error`).hide();
+        }
+    });
+
+    $('#registerTeacherModal').on('shown.bs.modal', function() {
+        $('#first_name').focus();
+    });
+});
+</script>
+{% endblock %}

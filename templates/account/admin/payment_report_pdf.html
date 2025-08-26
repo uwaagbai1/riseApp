@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #000; padding: 8px; }
+        th { background-color: #f2f2f2; text-align: left; }
+        .text-right { text-align: right; }
+        h2, h4 { text-align: center; }
+    </style>
+</head>
+<body>
+    <h2>Payment Report - {{ current_session.name }} Term {{ current_term }}</h2>
+    <p style="text-align: center;">Generated on {{ date_generated|date:'d M Y' }}</p>
+    {% if sort_type == 'all' %}
+        <h4>Full Paid ({{ full_paid_count }})</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Students</th>
+                    <th>Phone</th>
+                    <th class="text-right">Total Fees (XOF)</th>
+                    <th class="text-right">Amount Paid (XOF)</th>
+                    <th class="text-right">Amount Due (XOF)</th>
+                    <th class="text-right">Paid (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in full_paid %}
+                    <tr>
+                        <td>{{ item.students }}</td>
+                        <td>{{ item.parent_phone }}</td>
+                        <td class="text-right">{{ item.total_fees|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.amount_paid|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.amount_due|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.percentage_paid|floatformat:2 }}%</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6">No full paid families</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h4>Partial Paid ({{ partial_paid_count }})</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Students</th>
+                    <th>Phone</th>
+                    <th class="text-right">Total Fees (XOF)</th>
+                    <th class="text-right">Amount Paid (XOF)</th>
+                    <th class="text-right">Amount Due (XOF)</th>
+                    <th class="text-right">Paid (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in partial_paid %}
+                    <tr>
+                        <td>{{ item.students }}</td>
+                        <td>{{ item.parent_phone }}</td>
+                        <td class="text-right">{{ item.total_fees|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.amount_paid|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.amount_due|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.percentage_paid|floatformat:2 }}%</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6">No partial paid families</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h4>Not Paid ({{ not_paid_count }})</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Students</th>
+                    <th>Phone</th>
+                    <th class="text-right">Total Fees (XOF)</th>
+                    <th class="text-right">Amount Paid (XOF)</th>
+                    <th class="text-right">Amount Due (XOF)</th>
+                    <th class="text-right">Paid (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in not_paid %}
+                    <tr>
+                        <td>{{ item.students }}</td>
+                        <td>{{ item.parent_phone }}</td>
+                        <td class="text-right">{{ item.total_fees|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.amount_paid|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.amount_due|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.percentage_paid|floatformat:2 }}%</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6">No unpaid families</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Students</th>
+                    <th>Phone</th>
+                    <th class="text-right">Total Fees (XOF)</th>
+                    <th class="text-right">Amount Paid (XOF)</th>
+                    <th class="text-right">Amount Due (XOF)</th>
+                    <th class="text-right">Paid (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in report_data %}
+                    <tr>
+                        <td>{{ item.students }}</td>
+                        <td>{{ item.parent_phone }}</td>
+                        <td class="text-right">{{ item.total_fees|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.amount_paid|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.amount_due|floatformat:2 }}</td>
+                        <td class="text-right">{{ item.percentage_paid|floatformat:2 }}%</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="6">No data available</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</body>
+</html>

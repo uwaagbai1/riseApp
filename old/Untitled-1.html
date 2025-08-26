@@ -1,0 +1,625 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+
+{% block content %}
+<div class="hp-main-layout-content">
+    <div class="row mb-32 gy-32">
+        <div class="col-12">
+            <div class="hp-bg-black-bg py-32 py-sm-64 px-24 px-sm-48 px-md-80 position-relative overflow-hidden hp-page-content" style="border-radius: 32px;">
+                <svg width="358" height="336" fill="none" xmlns="http://www.w3.org/2000/svg" class="position-absolute hp-rtl-scale-x-n1" style="bottom: 0px; right: 0px;">
+                    <path d="M730.404 135.471 369.675-6.641l88.802 164.001-243.179-98.8 246.364 263.281-329.128-126.619 114.698 166.726-241.68-62.446" stroke="url(#a)" stroke-width="40" stroke-linejoin="bevel"></path>
+                    <defs>
+                        <linearGradient id="a" x1="315.467" y1="6.875" x2="397.957" y2="337.724" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#fff"></stop>
+                            <stop offset="1" stop-color="#fff" stop-opacity="0"></stop>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="row">
+                    <div class="col-sm-8 col-12">
+                        <div class="row">
+                            <div class="col-12">
+                                <h1 class="mb-0 hp-text-color-black-0">Your Grades</h1>
+                                <h4 class="mt-8 hp-text-color-black-0">Academic Performance for {{ current_session.name|default:'N/A' }} Term {{ current_term_display|default:'N/A' }}</h4>
+                                <p class="mt-2 hp-text-color-black-0">Class: {{ student.current_class.level|default:'N/A' }}{% if student.current_section %} {{ student.current_section.suffix }}{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="row g-32">
+                <div class="col-12">
+                    <div class="card hp-bg-color-dark-90 p-24">
+                        {# Access Status Alerts #}
+                        {% if not subject_ids %}
+                            <div class="alert alert-warning hp-p1-body">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>No subjects assigned to you. Please contact your teacher.
+                            </div>
+                        {% elif fees_paid %}
+                            <div class="alert alert-success hp-p1-body">
+                                <i class="bi bi-check-circle-fill me-2"></i>Access to results granted due to paid fees for {{ current_session.name|default:'N/A' }} Term {{ current_term_display|default:'N/A' }}.
+                            </div>
+                        {% elif access_approved %}
+                            <div class="alert alert-dark hp-p1-body">
+                                <i class="bi bi-check-circle-fill me-2"></i>Access to results has been approved by the administrator for {{ current_session.name|default:'N/A' }} Term {{ current_term_display|default:'N/A' }}.
+                            </div>
+                        {% else %}
+                            <div class="alert alert-dark hp-p1-body">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>Results are not available because fees for this term are not paid and access has not been approved.
+                                {% if not access_request %}
+                                    <button id="request-access-btn" class="btn btn-sm btn-primary ms-2"
+                                            {% if not current_session.id %}disabled title="Session not available"{% endif %}
+                                            data-session="{{ current_session.id|default:'' }}"
+                                            data-term="{{ current_term|default:'' }}">Request Access</button>
+                                {% elif access_request.status == 'Pending' %}
+                                    <div class="alert alert-success mt-2 py-1 px-2 d-inline-block">
+                                        <i class="bi bi-hourglass-split me-2"></i>Pending approval
+                                    </div>
+                                {% elif access_request.status == 'Denied' %}
+                                    <button id="request-access-btn" class="btn btn-sm btn-primary ms-2"
+                                            data-session="{{ current_session.id|default:'' }}"
+                                            data-term="{{ current_term|default:'' }}">Request Again</button>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        
+                        {# Results Display #}
+                        {% if fees_paid or access_approved %}
+                            <div class="d-flex justify-content-between align-items-center mb-16 flex-wrap">
+                                <h3><i>Cognitive Performance</i></h3>
+                                {% if result_upload_date %}
+                                    <div class="alert alert-dark mb-0 py-2 px-3">
+                                        <strong>Results Uploaded:</strong> {{ result_upload_date|date:"F d, Y" }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% if results %}
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Subject</th>
+                                                {% if is_nursery %}
+                                                    <th>Total Marks (100)</th>
+                                                {% elif is_primary %}
+                                                    <th>Test (20)</th>
+                                                    <th>Homework (10)</th>
+                                                    <th>Classwork (10)</th>
+                                                    <th>Exam (60)</th>
+                                                {% else %}
+                                                    <th>C.A (10)</th>
+                                                    <th>Test 1 (10)</th>
+                                                    <th>Test 2 (10)</th>
+                                                    <th>Exam (70)</th>
+                                                {% endif %}
+                                                <th>Total (100)</th>
+                                                <th>Grade</th>
+                                                {% if not is_nursery and not is_primary %}
+                                                    <th>G.P</th>
+                                                {% endif %}
+                                                <th>Description</th>
+                                                <th>Subject Position</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for result in results %}
+                                                {% if result.total_score > 0 %}
+                                                    <tr>
+                                                        <td>{{ result.subject.name }}</td>
+                                                        {% if is_nursery %}
+                                                            <td>{{ result.total_marks|floatformat:1|default:"-" }}</td>
+                                                        {% elif is_primary %}
+                                                            <td>{{ result.test|floatformat:1|default:"-" }}</td>
+                                                            <td>{{ result.homework|floatformat:1|default:"-" }}</td>
+                                                            <td>{{ result.classwork|floatformat:1|default:"-" }}</td>
+                                                            <td>{{ result.nursery_primary_exam|floatformat:1|default:"-" }}</td>
+                                                        {% else %}
+                                                            <td>{{ result.ca|floatformat:1|default:"-" }}</td>
+                                                            <td>{{ result.test_1|floatformat:1|default:"-" }}</td>
+                                                            <td>{{ result.test_2|floatformat:1|default:"-" }}</td>
+                                                            <td>{{ result.exam|floatformat:1|default:"-" }}</td>
+                                                        {% endif %}
+                                                        <td>{{ result.total_score|floatformat:1 }}</td>
+                                                        <td>{{ result.grade }}</td>
+                                                        {% if not is_nursery and not is_primary %}
+                                                            <td>{{ result.grade_point|floatformat:1|default_if_none:"-" }}</td>
+                                                        {% endif %}
+                                                        <td>{{ result.description }}</td>
+                                                        <td>{{ result.subject_position|default:"-" }}</td>
+                                                    </tr>
+                                                {% else %}
+                                                    <tr>
+                                                        <td>{{ result.subject.name }}</td>
+                                                        <td colspan="{% if is_nursery %}5{% elif is_primary %}8{% else %}9{% endif %}" class="text-center">
+                                                            <div class="alert alert-daek mb-0">
+                                                                <i class="bi bi-hourglass-split me-2"></i><strong>Awaiting Teacher Input</strong>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-12">
+                                    <div class="cards-grid">
+                                        <div class="info-card">
+                                            <h5>Performance Summary</h5>
+                                            <div class="info-item">
+                                                <span>Average Score:</span>
+                                                <strong>{{ average_score|floatformat:2 }}%</strong>
+                                            </div>
+                                            {% if not is_nursery and not is_primary %}
+                                                <div class="info-item">
+                                                    <span>Average Grade Point:</span>
+                                                    <strong>{{ average_grade_point|floatformat:2 }}</strong>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="info-card">
+                                            <h5>Section Standing</h5>
+                                            <div class="info-item">
+                                                <span>Position in {{ student.current_section|default:'Section' }}:</span>
+                                                <strong>{{ class_position_marks|default:"-" }}</strong>
+                                            </div>
+                                            <div class="info-item">
+                                                <span>Out Of:</span>
+                                                <strong>{{ total_in_section|default:"-" }}</strong>
+                                            </div>
+                                        </div>
+                                        <div class="info-card">
+                                            <h5>Important Dates</h5>
+                                            <div class="info-item">
+                                                <span>Next Term Begins:</span>
+                                                <strong>{{ next_term_start_date|default:"TBD" }}</strong>
+                                            </div>
+                                            <div class="info-item">
+                                                <span>Results Posted On:</span>
+                                                <strong>{{ result_upload_date|date:"F d, Y"|default:"Not available" }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-dark hp-p1-body">
+                                    <i class="bi bi-info-circle-fill me-2"></i>No results available for {{ current_session.name|default:'N/A' }} Term {{ current_term_display|default:'N/A' }}.
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                        
+                        {# Past Results Section #}
+                        <div class="mt-32">
+                            <div class="d-flex justify-content-between align-items-center mb-16">
+                                <h3>Past Results</h3>
+                                <button class="btn btn-sm btn-dark" type="button" data-bs-toggle="collapse" data-bs-target="#pastResultsCollapse" aria-expanded="false" aria-controls="pastResultsCollapse">
+                                    <i class="bi bi-chevron-down"></i> Toggle View
+                                </button>
+                            </div>
+                            <div class="collapse" id="pastResultsCollapse">
+                                {% if past_results_grouped %}
+                                    {% for group in past_results_grouped %}
+                                    <div class="card mb-3">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">
+                                                {{ group.session.name }} - Term {{ group.term_display }}
+                                            </h5>
+                                            <div>
+                                                {% if group.has_access %}
+                                                    <span class="badge bg-success">Access Granted</span>
+                                                {% elif group.access_request %}
+                                                    {% if group.access_request.status == 'Pending' %}
+                                                        <span class="badge bg-warning">Pending Approval</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger">Access Denied</span>
+                                                        <button class="btn btn-sm btn-primary ms-2 request-past-access"
+                                                                data-session="{{ group.session.id }}"
+                                                                data-term="{{ group.term }}">
+                                                            Request Again
+                                                        </button>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-primary request-past-access"
+                                                            data-session="{{ group.session.id }}"
+                                                            data-term="{{ group.term }}">
+                                                        Request Access
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="card-body">
+                                            {% if group.has_access %}
+                                                <div class="table-responsive">
+                                                    <table class="table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Subject</th>
+                                                                {% if is_nursery %}
+                                                                    <th class="text-center">Total Marks (100)</th>
+                                                                {% elif is_primary %}
+                                                                    <th class="text-center">Test (20)</th>
+                                                                    <th class="text-center">Homework (10)</th>
+                                                                    <th class="text-center">Classwork (10)</th>
+                                                                    <th class="text-center">Exam (60)</th>
+                                                                {% else %}
+                                                                    <th class="text-center">C.A (10)</th>
+                                                                    <th class="text-center">Test 1 (10)</th>
+                                                                    <th class="text-center">Test 2 (10)</th>
+                                                                    <th class="text-center">Exam (70)</th>
+                                                                {% endif %}
+                                                                <th class="text-center">Total (100)</th>
+                                                                <th class="text-center">Grade</th>
+                                                                {% if not is_nursery and not is_primary %}
+                                                                    <th class="text-center">G.P</th>
+                                                                {% endif %}
+                                                                <th class="text-center">Position</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for result in group.results %}
+                                                                {% if result.total_score > 0 %}
+                                                                    <tr>
+                                                                        <td>{{ result.subject.name }}</td>
+                                                                        {% if is_nursery %}
+                                                                            <td class="text-center">{{ result.total_marks|default:"-"|floatformat:1 }}</td>
+                                                                        {% elif is_primary %}
+                                                                            <td class="text-center">{{ result.test|default:"-"|floatformat:1 }}</td>
+                                                                            <td class="text-center">{{ result.homework|default:"-"|floatformat:1 }}</td>
+                                                                            <td class="text-center">{{ result.classwork|default:"-"|floatformat:1 }}</td>
+                                                                            <td class="text-center">{{ result.nursery_primary_exam|default:"-"|floatformat:1 }}</td>
+                                                                        {% else %}
+                                                                            <td class="text-center">{{ result.ca|default:"-"|floatformat:1 }}</td>
+                                                                            <td class="text-center">{{ result.test_1|default:"-"|floatformat:1 }}</td>
+                                                                            <td class="text-center">{{ result.test_2|default:"-"|floatformat:1 }}</td>
+                                                                            <td class="text-center">{{ result.exam|default:"-"|floatformat:1 }}</td>
+                                                                        {% endif %}
+                                                                        <td class="text-center fw-bold">{{ result.total_score|floatformat:1 }}</td>
+                                                                        <td class="text-center">{{ result.grade }}</td>
+                                                                        {% if not is_nursery and not is_primary %}
+                                                                            <td class="text-center">{{ result.grade_point|default:"-"|floatformat:1 }}</td>
+                                                                        {% endif %}
+                                                                        <td class="text-center">{{ result.subject_position|default:"-" }}</td>
+                                                                    </tr>
+                                                                {% else %}
+                                                                    <tr>
+                                                                        <td>{{ result.subject.name }}</td>
+                                                                        <td colspan="{% if is_nursery %}5{% elif is_primary %}8{% else %}9{% endif %}" class="text-center" style="border: 1px solid #444; background-color: #343a40;">
+                                                                            <div class="alert alert-secondary mb-0">
+                                                                                <i class="bi bi-hourglass-split me-2"></i><strong>Awaiting Teacher Input</strong>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                
+                                                <div class="row mt-3">
+                                                    <div class="col-md-4">
+                                                        <strong>Average Score:</strong> {{ group.average_score|floatformat:2 }}%
+                                                    </div>
+                                                    {% if not is_nursery and not is_primary %}
+                                                    <div class="col-md-4">
+                                                        <strong>Average G.P:</strong> {{ group.average_grade_point|floatformat:2 }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <div class="col-md-4">
+                                                        <strong>Class Position:</strong> {{ group.class_position|default:"-" }} / {{ group.total_in_section|default:"-" }}
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <div class="alert alert-info">
+                                                    <i class="bi bi-info-circle"></i> 
+                                                    Results for {{ group.session.name }} Term {{ group.term_display }} 
+                                                    are not available. Please request access.
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle-fill me-2"></i>No past results available.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .info-card {
+            border: 1px solid #000;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .info-card h5 {
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-bottom: 1px solid #000;
+            padding-bottom: 0.5rem;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+        }
+        .info-item strong {
+            font-weight: bold;
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(255,255,255,0.05);
+        }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        // Current term access request
+        $('#request-access-btn').click(function() {
+            const button = $(this);
+            const sessionId = button.data('session');
+            const term = button.data('term');
+
+            if (!sessionId || !term) {
+                alert('Error: Session or term not specified. Please contact support.');
+                return;
+            }
+
+            button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Submitting...');
+
+            $.ajax({
+                url: '{% url "student_request_result_access" %}',
+                type: 'POST',
+                data: {
+                    session_id: sessionId,
+                    term: term,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        button.replaceWith('<span class="badge bg-success">Request Submitted</span>');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        button.prop('disabled', false).text(button.text().includes('Again') ? 'Request Again' : 'Request Access');
+                        alert('Error: ' + response.error);
+                    }
+                },
+                error: function() {
+                    button.prop('disabled', false).text(button.text().includes('Again') ? 'Request Again' : 'Request Access');
+                    alert('Failed to submit request. Please try again.');
+                }
+            });
+        });
+
+        // Past term access requests
+        $(document).on('click', '.request-past-access', function() {
+            const button = $(this);
+            const sessionId = button.data('session');
+            const term = button.data('term');
+
+            button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Requesting...');
+
+            $.ajax({
+                url: '{% url "student_request_result_access" %}',
+                type: 'POST',
+                data: {
+                    session_id: sessionId,
+                    term: term,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        button.replaceWith('<span class="badge bg-success">Request Submitted</span>');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        button.prop('disabled', false).text(button.text().includes('Again') ? 'Request Again' : 'Request Access');
+                        alert('Error: ' + response.error);
+                    }
+                },
+                error: function() {
+                    button.prop('disabled', false).text(button.text().includes('Again') ? 'Request Again' : 'Request Access');
+                    alert('Failed to submit request. Please try again.');
+                }
+            });
+        });
+    });
+    </script>
+{% endblock %}
+
+@login_required
+@student_required
+def student_grades(request):
+    context = get_user_context(request)
+    if not context:
+        logger.error(f"Invalid user context for user {request.user.username}")
+        return redirect('login')
+
+    student = context['student']
+    if student.current_class and student.current_class.level == 'Creche':
+        messages.info(request, 'Creche students do not have grades.')
+        logger.info(f"Creche student {student.full_name} attempted to view grades")
+        return redirect('dashboard')
+
+    current_session, current_term = get_current_session_term()
+    if not current_session or not current_term:
+        messages.error(request, "Unable to determine current session or term.")
+        logger.error(f"No current session or term for student {student.full_name}")
+        return redirect('dashboard')
+
+    is_nursery = student.current_class and student.current_class.section == 'Nursery'
+    is_primary = student.current_class and student.current_class.section == 'Primary'
+
+    # Current term access check
+    fees_paid = Payment.objects.filter(
+        student=student,
+        session=current_session,
+        term=current_term,
+        status='Completed'
+    ).exists()
+    
+    access_approved = False
+    access_request = None
+    if not fees_paid:
+        access_request = ResultAccessRequest.objects.filter(
+            student=student,
+            session=current_session,
+            term=current_term
+        ).first()
+        access_approved = access_request and access_request.status == 'Approved'
+
+    # Get assigned subjects
+    student_subjects = StudentSubject.objects.filter(
+        student=student,
+        session=current_session,
+        term=current_term
+    ).select_related('subject')
+    subject_ids = list(student_subjects.values_list('subject__id', flat=True))
+
+    # Get current term results
+    results = []
+    result_upload_date = None
+    if (fees_paid or access_approved) and subject_ids:
+        existing_results = Result.objects.filter(
+            student=student,
+            session=current_session,
+            term=current_term,
+            subject__id__in=subject_ids
+        ).select_related('subject').order_by('subject__id')
+
+        results_dict = {result.subject.id: result for result in existing_results}
+        
+        for student_subject in student_subjects:
+            subject = student_subject.subject
+            result = results_dict.get(subject.id, Result(
+                student=student,
+                subject=subject,
+                session=current_session,
+                term=current_term,
+                total_score=0
+            ))
+            results.append(result)
+
+        if results:
+            result_upload_date = max(
+                (r.upload_date for r in results if r.upload_date), 
+                default=None
+            )
+
+    # Calculate current term averages
+    valid_results = [r for r in results if r.total_score > 0]
+    average_score = sum(r.total_score for r in valid_results) / len(valid_results) if valid_results else 0.0
+    average_grade_point = (
+        sum(r.grade_point for r in valid_results if r.grade_point is not None) / len(valid_results)
+        if valid_results and any(r.grade_point is not None for r in valid_results)
+        else 0.0
+    ) if not (is_nursery or is_primary) else None
+
+    class_position_marks = valid_results[0].class_position if valid_results else '-'
+    class_position_gp = valid_results[0].class_position_gp if valid_results and not (is_nursery or is_primary) else '-'
+    total_in_section = student.current_section.students.count() if student.current_section else 0
+
+    # Get past results grouped by session and term
+    past_results = Result.objects.filter(
+        student=student,
+        subject__id__in=subject_ids
+    ).exclude(
+        Q(session=current_session, term=current_term) |
+        Q(total_score=0)  # Exclude empty results
+    ).select_related('subject', 'session').order_by('-session__start_year', 'term', 'subject__name')
+
+    # Group and process past results
+    past_results_grouped = []
+    sessions_with_results = set()
+    
+    for session in Session.objects.filter(
+        result__student=student,
+        result__subject__id__in=subject_ids
+    ).distinct().order_by('-start_year'):
+        for term in ['1', '2', '3']:
+            term_results = [r for r in past_results if r.session == session and r.term == term]
+            if not term_results:
+                continue
+
+            # Check access for this term
+            term_fees_paid = Payment.objects.filter(
+                student=student,
+                session=session,
+                term=term,
+                status='Completed'
+            ).exists()
+            
+            term_access_approved = False
+            term_access_request = None
+            
+            if not term_fees_paid:
+                term_access_request = ResultAccessRequest.objects.filter(
+                    student=student,
+                    session=session,
+                    term=term
+                ).first()
+                term_access_approved = term_access_request and term_access_request.status == 'Approved'
+
+            # Calculate term averages
+            term_valid_results = [r for r in term_results if r.total_score > 0]
+            term_avg_score = sum(r.total_score for r in term_valid_results) / len(term_valid_results) if term_valid_results else 0
+            term_avg_gp = (
+                sum(r.grade_point for r in term_valid_results if r.grade_point is not None) / len(term_valid_results)
+                if term_valid_results and any(r.grade_point is not None for r in term_valid_results)
+                else 0
+            ) if not (is_nursery or is_primary) else None
+
+            past_results_grouped.append({
+                'session': session,
+                'term': term,
+                'term_display': dict(TERM_CHOICES).get(term),
+                'results': term_results,
+                'has_access': term_fees_paid or term_access_approved,
+                'access_request': term_access_request,
+                'average_score': term_avg_score,
+                'average_grade_point': term_avg_gp,
+                'class_position': term_results[0].class_position if term_results else '-',
+                'class_position_gp': term_results[0].class_position_gp if term_results and not (is_nursery or is_primary) else '-',
+                'total_in_section': student.current_section.students.count() if student.current_section and term_results else 0
+            })
+
+    context.update({
+        'student': student,
+        'results': results,
+        'average_score': average_score,
+        'average_grade_point': average_grade_point,
+        'class_position_marks': class_position_marks,
+        'class_position_gp': class_position_gp,
+        'past_results_grouped': past_results_grouped,
+        'current_session': current_session,
+        'current_term': current_term,
+        'current_term_display': dict(TERM_CHOICES).get(current_term),
+        'fees_paid': fees_paid,
+        'access_approved': access_approved,
+        'access_request': access_request,
+        'is_nursery': is_nursery,
+        'is_primary': is_primary,
+        'result_upload_date': result_upload_date,
+        'total_in_section': total_in_section,
+        'sessions': Session.objects.all(),
+        'terms': TERM_CHOICES,
+        'next_term_start_date': getattr(settings, 'NEXT_TERM_START_DATE', 'TBD'),
+    })
+
+    return render(request, 'account/student/student_grades.html', context)

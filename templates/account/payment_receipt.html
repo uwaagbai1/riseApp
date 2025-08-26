@@ -1,0 +1,103 @@
+{% load filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Receipt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header img {
+            max-width: 150px;
+        }
+        .details, .students, .summary {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            {% if school_logo %}
+                <img src="{{ school_logo }}" alt="School Logo">
+            {% endif %}
+            <h1>{{ school_name|default:"School Name" }}</h1>
+            <p>{{ school_address|default:"School Address" }}</p>
+            <p>{{ school_contact|default:"School Contact" }}</p>
+        </div>
+        <h2>Payment Receipt</h2>
+        <div class="details">
+            <p><strong>Parent:</strong> {{ payment.parent.full_name|default:payment.parent.phone_number }} ({{ payment.parent.phone_number|default:"N/A" }})</p>
+            <p><strong>Session:</strong> {{ payment.session.name|default:"N/A" }}</p>
+            <p><strong>Term:</strong> {{ payment.get_term_display|default:"N/A" }}</p>
+            <p><strong>Transaction ID:</strong> {{ payment.transaction_id|default:payment.id }}</p>
+            <p><strong>Date:</strong> {{ payment.created_at|date:"d M Y"|default:"N/A" }}</p>
+        </div>
+        <div class="students">
+            <h3>Students</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Admission Number</th>
+                        <th>Class</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in payment.students.all %}
+                        <tr>
+                            <td>{{ student.full_name|default:"N/A" }}</td>
+                            <td>{{ student.admission_number|default:"N/A" }}</td>
+                            <td>{{ student.current_class.level|default:"N/A" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3">No students associated with this payment.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="summary">
+            <p><strong>Total Fees:</strong> {{ payment.calculate_total_fee|default:"0.00" }} XOF</p>
+            <p><strong>Amount Paid:</strong> {{ payment.amount|default:"0.00" }} XOF</p>
+            <p><strong>Amount Due:</strong> {% if payment.calculate_total_fee and payment.amount %}{{ payment.calculate_total_fee|subtract:payment.amount|default:"0.00" }}{% else %}0.00{% endif %} XOF</p>
+            <p><strong>Status:</strong> {{ payment.status|default:"N/A" }}</p>
+        </div>
+        <div class="footer">
+            <p>Thank you for your payment. For inquiries, contact {{ school_contact|default:"School Contact" }}.</p>
+        </div>
+    </div>
+</body>
+</html>

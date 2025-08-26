@@ -1,0 +1,178 @@
+{% extends 'main/base_generic.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .contact-map-container {
+        margin-top: 40px;
+        padding: 20px;
+        background-color: #1a1a1a;
+        border-radius: 12px;
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .contact-map-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+    }
+    .contact-map-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 12px;
+        padding: 2px;
+        background: linear-gradient(45deg, #ffffff33, #ffffff66);
+        -webkit-mask: 
+            linear-gradient(#fff 0 0) content-box, 
+            linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+    .contact-map-container iframe {
+        width: 100%;
+        height: 450px;
+        border: 0;
+        border-radius: 10px;
+        display: block;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+    .contact-map-container iframe.loaded {
+        opacity: 1;
+    }
+    .map-loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border: 4px solid #ffffff33;
+        border-top: 4px solid #ffffff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        z-index: 10;
+    }
+    .map-overlay {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        padding: 10px 15px;
+        border-radius: 6px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 5;
+    }
+    .map-overlay::before {
+        content: '';
+        width: 16px;
+        height: 16px;
+        background: url('{% static 'main/images/icons/pin.svg' %}') no-repeat center;
+        background-size: contain;
+    }
+    @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    @media (max-width: 768px) {
+        .contact-map-container {
+            padding: 15px;
+            margin-top: 30px;
+        }
+        .contact-map-container iframe {
+            height: 300px;
+        }
+        .map-overlay {
+            font-size: 12px;
+            padding: 8px 12px;
+        }
+    }
+</style>
+
+<!-- Page Banner -->
+<div class="page-banner-area text-center position-relative z-1 pt-60 pb-60" style="background-color: #131313;">
+    <div class="container">
+        <h1 class="mb-0 text-white text-uppercase" data-cue="slideInUp">
+            Contact
+        </h1>
+    </div>
+</div>
+
+<!-- Spacer -->
+<div class="pb-120 border-bottom"></div>
+
+<!-- Contact Info and Image Section -->
+<div class="contact-info-area bg-131313 ptb-120">
+    <div class="container-fluid px-0">
+        <div class="row mx-0">
+            <div class="col-lg-8 col-md-12 px-0">
+                <div class="contact-info-content">
+                    <div class="content">
+                        <div class="row" data-cues="slideInUp" data-group="contactInfoContent">
+                            <div class="col-lg-6 col-sm-6">
+                                <div class="box">
+                                    <h3 class="fw-semibold">
+                                        Lome Campus 1
+                                    </h3>
+                                    <ul class="p-0 m-0 list-unstyled">
+                                        <li class="position-relative">
+                                            <img src="{% static 'main/images/icons/office.svg' %}" alt="office">
+                                            796 Rue Des Cormiers, Qt Hedrzranawoe B.P. 3128 LOME-TOGO
+                                        </li>
+                                        <li class="position-relative">
+                                            <img src="{% static 'main/images/icons/email2.svg' %}" alt="office">
+                                            <a href="mailto:info@rise-edu.com">info@rise-edu.com</a>
+                                            <br>
+                                            <a href="mailto:rehobothint2012@gmail.com">rehobothint2012@gmail.com</a>
+                                        </li>
+                                        <li class="position-relative">
+                                            <img src="{% static 'main/images/icons/bv.svg' %}" alt="office">
+                                            <a href="tel:+22890165089">+228 90 16 50 89</a>
+                                            <br>
+                                            <a href="tel:+22890016077">+228 90 01 60 77</a>
+                                            <br>
+                                            <a href="tel:+22897412298">+228 97 41 22 98</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-12 px-0">
+                <div class="contact-info-image">
+                    <img src="{% static 'main/images/contact.jpg' %}" alt="contact-info-image">
+                </div>
+            </div>
+        </div>
+        <!-- Map Row -->
+        <div class="row mx-0">
+            <div class="col-12 px-0">
+                <div class="contact-map-container">
+                    <div class="map-loading"></div>
+                    <div class="map-overlay">Lome Campus Location</div>
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m23!1m12!1m3!1d126931.65174312994!2d1.1662382518450207!3d6.182371655769787!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m8!3e6!4m0!4m5!1s0x1023e158f3f52a85%3A0xffb21c4421a91ee!2sNo%20796%20Rue%20Des%20Cormiers%2C%20Hedzranawoe%20Assiyeye%2C%20Lom%C3%A9!3m2!1d6.182378099999999!2d1.24864!5e0!3m2!1sen!2stg!4v1747609793239!5m2!1sen!2stg" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        referrerpolicy="no-referrer-when-downgrade"
+                        onload="this.classList.add('loaded'); this.previousElementSibling.style.display='none';">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

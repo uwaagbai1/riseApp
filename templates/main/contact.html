@@ -1,0 +1,118 @@
+{% extends 'main/base_generic.html' %}
+{% block title %} Contact Us {% endblock title %}
+{% load static %}
+{% block content %}
+<div class="page-banner-area text-center position-relative z-1 pt-60 pb-60" style="background-color: #131313;">
+    <div class="container">
+        <h1 class="mb-0 text-white text-uppercase" data-cue="slideInUp">
+            Contact
+        </h1>
+    </div>
+</div>
+<div class="pb-120 border-bottom"></div>
+
+<div class="contact-info-area bg-131313 ptb-120">
+    <div class="container-fluid px-0">
+        <div class="row mx-0">
+            <div class="col-lg-8 col-md-12 px-0">
+                <div class="contact-info-content">
+                    <div class="content">
+                        <div class="row" data-cues="slideInUp" data-group="contactInfoContent">
+                            <div class="col-lg-6 col-sm-6">
+                                <div class="box">
+                                    <h3 class="fw-semibold">
+                                        Lome Campus 1
+                                    </h3>
+                                    <ul class="p-0 m-0 list-unstyled">
+                                        <li class="position-relative">
+                                            <img src="{% static 'main/images/icons/office.svg' %}" alt="office">
+                                            796 Rue Des Cormiers, Qt Hedrzranawoe B.P. 3128 LOME-TOGO
+                                        </li>
+                                        <li class="position-relative">
+                                            <img src="{% static 'main/images/icons/email2.svg' %}" alt="office">
+                                            <a href="mailto:info@rise-edu.com">info@rise-schools.com</a>
+                                            <br>
+                                            <a href="mailto:rehobothint2012@gmail.com">rehobothint2012@gmail.com</a>
+                                        </li>
+                                        <li class="position-relative">
+                                            <img src="{% static 'main/images/icons/bv.svg' %}" alt="office">
+                                            <a href="tel:+22890165089">+228 90 16 50 89</a>
+                                            <br>
+                                            <a href="tel:+22890016077">+228 90 01 60 77</a>
+                                            <br>
+                                            <a href="tel:+22897412298">+228 97 41 22 98</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-12 px-0">
+                <div class="contact-info-image">
+                    <img src="{% static 'main/images/contact.jpg' %}" alt="contact-info-image">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="map-section py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12">
+                <div class="text-center mb-4">
+                    <h2 class="fw-semibold mb-3 text-white">Find Us Here</h2>
+                    <p class="text-white">Visit our Lome campus located at Hedrzranawoe</p>
+                </div>
+                <div class="map-container position-relative overflow-hidden rounded shadow-lg">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.6140294465795!2d1.2460652737275293!3d6.182383327035998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1023e158f3f52a85%3A0xffb21c4421a91ee!2sRehoboth%20International%20School%20of%20Excellence!5e0!3m2!1sen!2stg!4v1754559615507!5m2!1sen!2stg" 
+                        width="100%" 
+                        height="450" 
+                        style="border:0;" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        referrerpolicy="no-referrer-when-downgrade"
+                        title="Rehoboth International School of Excellence Location">
+                    </iframe>
+                </div>
+                <div class="text-center mt-3">
+                    <a href="https://maps.google.com/?q=Rehoboth+International+School+of+Excellence,+Lome,+Togo" 
+                       target="_blank" 
+                       rel="noopener noreferrer" 
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-external-link-alt me-2"></i>Open in Google Maps
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Optional: Add some CSS for better responsive behavior -->
+<style>
+    .map-container {
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .map-container iframe {
+        border-radius: 15px;
+    }
+    
+    @media (max-width: 768px) {
+        .map-container iframe {
+            height: 300px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .map-container iframe {
+            height: 250px;
+        }
+    }
+</style>
+
+{% endblock content %}

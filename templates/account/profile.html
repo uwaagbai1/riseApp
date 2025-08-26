@@ -1,0 +1,960 @@
+{% extends 'account/base_generic.html' %}
+{% load static %}
+{% block content %}
+    <div class="hp-main-layout-content">
+        <div class="row mb-32 gy-32">
+            <div class="col-12">
+                <div class="row bg-black-0 hp-bg-color-dark-100 rounded pe-16 pe-sm-32 mx-0">
+                    <div class="col hp-profile-menu py-24" style="flex: 0 0 240px;">
+                        <div class="w-100">
+                            <div class="hp-profile-menu-header mt-16 mt-lg-0 text-center">
+                                <div class="d-flex justify-content-center">
+                                    <div class="d-inline-block position-relative">
+                                        <div class="avatar-item d-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px;">
+                                            {% if role == 'student' and student.photo %}
+                                                <img src="{{ student.photo.url }}" alt="Profile Picture">
+                                            {% elif role == 'teacher' and teacher.photo %}
+                                                <img src="{{ teacher.photo.url }}" alt="Profile Picture">
+                                            {% elif role == 'parent' and parent.photo %}
+                                                <img src="{{ parent.photo.url }}" alt="Profile Picture">
+                                            {% elif role == 'admin' %}
+                                                <img src="{% static 'accounts/app-assets/img/memoji/memoji-1.png' %}" alt="Default Avatar">
+                                            {% else %}
+                                                <img src="{% static 'accounts/app-assets/img/memoji/memoji-1.png' %}" alt="Default Avatar">
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <h3 class="mt-24 mb-4">
+                                    {% if role == 'student' %}{{ student.full_name }}
+                                    {% elif role == 'teacher' %}{{ teacher.full_name }}
+                                    {% elif role == 'parent' %}{{ parent.full_name|default:parent.phone_number }}
+                                    {% else %}{{ admin_user.get_full_name|default:admin_user.username }}{% endif %}
+                                </h3>
+                                {% if role == 'student' %}
+                                    <h5>Admission Number: {{ student.admission_number }}</h5>
+                                {% elif role == 'teacher' %}
+                                    <h5>Email: {{ teacher.school_email }}</h5>
+                                {% elif role == 'parent' %}
+                                    <h5>Phone: {{ parent.phone_number }}</h5>
+                                {% else %}
+                                    <h5>Username: {{ admin_user.username }}</h5>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="hp-profile-menu-body w-100 text-start mt-48 mt-lg-0">
+                            <ul class="me-n1 mx-lg-n12">
+                                <li class="mt-4 mb-16">
+                                    <a href="#personal-info" class="active position-relative text-black-80 hp-text-color-dark-30 hp-hover-text-color-primary-1 hp-hover-text-color-dark-0 py-12 px-24 d-flex align-items-center" data-section="personal-info">
+                                        <i class="iconly-Curved-User me-16"></i>
+                                        <span>Personal Information</span>
+                                        <span class="hp-menu-item-line position-absolute h-100 top-0 end-0 bg-primary hp-bg-dark-0" style="width: 2px;"></span>
+                                    </a>
+                                </li>
+                                <li class="mt-4 mb-16">
+                                    <a href="#notifications" class="position-relative text-black-80 hp-text-color-dark-30 hp-hover-text-color-primary-1 hp-hover-text-color-dark-0 py-12 px-24 d-flex align-items-center" data-section="notifications">
+                                        <i class="iconly-Curved-Notification me-16"></i>
+                                        <span>Notifications {% if notifications|length > 0 %}<span class="badge bg-danger ms-2">{{ notifications|length }}</span>{% endif %}</span>
+                                        <span class="hp-menu-item-line position-absolute opacity-0 h-100 top-0 end-0 bg-primary hp-bg-dark-0" style="width: 2px;"></span>
+                                    </a>
+                                </li>
+                                <li class="mt-4 mb-16">
+                                    <a href="#identity-card" class="position-relative text-black-80 hp-text-color-dark-30 hp-hover-text-color-primary-1 hp-hover-text-color-dark-0 py-12 px-24 d-flex align-items-center" data-section="identity-card">
+                                        <i class="iconly-Curved-Activity me-16"></i>
+                                        <span>Identity Card</span>
+                                        <span class="hp-menu-item-line position-absolute opacity-0 h-100 top-0 end-0 bg-primary hp-bg-dark-0" style="width: 2px;"></span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="hp-profile-menu-footer">
+                            <img src="{% static 'accounts/app-assets/img/pages/profile/menu-img.svg' %}" alt="Profile Image">
+                        </div>
+                    </div>
+                    <div class="col ps-16 ps-sm-32 py-24 py-sm-32 overflow-hidden">
+                        <div id="personal-info" class="section">
+                            <div class="row">
+                                <div class="col-12 col-md-8">
+                                    <h2>Personal Information</h2>
+                                    <p class="hp-p1-body mb-0"></p>
+                                </div>
+                                <div class="divider border-black-40 hp-border-color-dark-80"></div>
+                                <div class="col-12 col-md-8">
+                                    <h3>About</h3>
+                                    <p class="hp-p1-body mb-0">
+                                        {% if role == 'student' %}
+                                            I am a student in {{ student.current_section|default:"no section assigned" }} for the {{ session }} session.
+                                        {% elif role == 'teacher' %}
+                                            I am a teacher assigned to {% for section in assigned_sections %}{{ section }}{% if not forloop.last %}, {% endif %}{% empty %}no sections{% endfor %}.
+                                        {% elif role == 'parent' %}
+                                            I am a parent with {{ children_count }} registered child{% if children_count > 1 %}ren{% endif %} for the {{ session }} session.
+                                        {% else %}
+                                            I am an administrator managing the school system.
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="divider border-black-40 hp-border-color-dark-80"></div>
+                                <div class="col-12">
+                                    <div class="row align-items-center justify-content-between">
+                                        <div class="col-12 col-md-auto">
+                                            <h3>Contact</h3>
+                                        </div>
+                                        <div class="col-12 hp-profile-content-list mt-3 pb-0 pb-sm-120">
+                                            <ul>
+                                                {% if role == 'student' %}
+                                                    <li class="mt-18">
+                                                        <span class="hp-p1-body">Parent/Guardian Phone Number</span>
+                                                        <a class="mt-0 mt-sm-4 hp-p1-body text-black-100 hp-text-color-dark-0" href="tel:{{ student.parent_phone }}">{{ student.parent_phone }}</a>
+                                                    </li>
+                                                    <span class="hp-p1-body">Address</span>
+                                                        <span class="mt-0 mt-sm-4 hp-p1-body text-black-100 hp-text-color-dark-0">{{ student.address }}</span>
+                                                    </li>
+                                                {% elif role == 'teacher' %}
+                                                    <li class="mt-18">
+                                                        <span class="hp-p1-body">School Email</span>
+                                                        <a class="mt-0 mt-sm-4 hp-p1-body text-black-100 hp-text-color-dark-0" href="mailto:{{ teacher.school_email }}">{{ teacher.school_email }}</a>
+                                                    </li>
+                                                {% elif role == 'parent' %}
+                                                    <span class="hp-p1-body">Phone Number</span>
+                                                        <a class="mt-0 mt-sm-4 hp-p1-body text-black-100 hp-text-color-dark-0" href="tel:{{ parent.phone_number }}">{{ parent.phone_number }}</a>
+                                                    </li>
+                                                {% else %}
+                                                    <li class="mt-18">
+                                                        <span class="hp-p1-body">Username</span>
+                                                        <span class="mt-0 mt-sm-4 hp-p1-body text-black-100 hp-text-color-dark-0">{{ admin_user.username }}</span>
+                                                    </li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="divider border-black-40 mt-2 hp-border-color-dark-80"></div>
+                                    <div class="col-12 col-md-8">
+                                        <h3>Update Profile</h3>
+                                        {% if messages %}
+                                            {% for message in messages %}
+                                                <div class="alert alert-{{ message.tags }} hp-p1-body">
+                                                    {{ message }}
+                                                </div>
+                                            {% endfor %}
+                                        {% endif %}
+                                        <form method="POST" enctype="multipart/form-data">
+                                            {% csrf_token %}
+                                            {% if role == 'student' %}
+                                                <div class="mb-3">
+                                                    <label for="full_name" class="form-label hp-p1-body">Full Name</label>
+                                                    <input type="text" class="form-control" id="full_name" name="full_name" value="{{ student.full_name }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="address" class="form-label hp-p1-body">Address</label>
+                                                    <textarea class="form-control" id="address" name="address" required>{{ student.address }}</textarea>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="parent_phone" class="form-label hp-p1-body">Parent/Guardian Phone</label>
+                                                    <input type="text" class="form-control" id="parent_phone" name="parent_phone" value="{{ student.parent_phone }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="photo" class="form-label hp-p1-body">Profile Picture</label>
+                                                    <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                                                </div>
+                                            {% elif role == 'teacher' %}
+                                                <div class="mb-3">
+                                                    <label for="full_name" class="form-label hp-p1-body">Full Name</label>
+                                                    <input type="text" class="form-control" id="full_name" name="full_name" value="{{ teacher.full_name }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="school_email" class="form-label hp-p1-body">School Email</label>
+                                                    <input type="email" class="form-control" id="school_email" name="school_email" value="{{ teacher.school_email }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="photo" class="form-label hp-p1-body">Profile Picture</label>
+                                                    <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                                                </div>
+                                            {% elif role == 'parent' %}
+                                                <div class="mb-3">
+                                                    <label for="full_name" class="form-label hp-p1-body">Full Name</label>
+                                                    <input type="text" class="form-control" id="full_name" name="full_name" value="{{ parent.full_name|default:'' }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="phone_number" class="form-label hp-p1-body">Phone Number</label>
+                                                    <input type="text" class="form-control" id="phone_number" name="phone_number" value="{{ parent.phone_number }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="photo" class="form-label hp-p1-body">Profile Picture</label>
+                                                    <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                                                </div>
+                                            {% elif role == 'admin' %}
+                                                <div class="mb-3">
+                                                    <label for="first_name" class="form-label hp-p1-body">First Name</label>
+                                                    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ admin_user.first_name }}" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="last_name" class="form-label hp-p1-body">Last Name</label>
+                                                    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ admin_user.last_name|default:'' }}">
+                                                </div>
+                                            {% endif %}
+                                            <button type="submit" class="btn btn-primary mt-16">Update Profile</button>
+                                        </form>
+                                        {% if role == 'parent' %}
+                                            <hr class="my-4">
+                                            <h3>Change Password</h3>
+                                            <form method="POST">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="change_password" value="1">
+                                                <div class="mb-3 position-relative">
+                                                    <label for="current_password" class="form-label hp-p1-body">Current Password</label>
+                                                    <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                                    <span class="password-toggle position-absolute end-0 top-50 translate-middle-y me-3" onclick="togglePassword('current_password', this)">
+                                                        <i class="bi bi-eye-slash"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="mb-3 position-relative">
+                                                    <label for="new_password" class="form-label hp-p1-body">New Password</label>
+                                                    <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                                    <span class="password-toggle position-absolute end-0 top-50 translate-middle-y me-3" onclick="togglePassword('new_password', this)">
+                                                        <i class="bi bi-eye-slash"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="mb-3 position-relative">
+                                                    <label for="confirm_password" class="form-label hp-p1-body">Confirm New Password</label>
+                                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                                    <span class="password-toggle position-absolute end-0 top-50 translate-middle-y me-3" onclick="togglePassword('confirm_password', this)">
+                                                        <i class="bi bi-eye-slash"></i>
+                                                    </span>
+                                                </div>
+                                                <button type="submit" class="btn btn-primary mt-16">Change Password</button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="notifications" class="section" style="display: none;">
+                                <h2>Notifications</h2>
+                                {% if notifications %}
+                                    <ul class="list-group">
+                                        {% for notification in notifications %}
+                                            <li class="list-group-item {% if not notification.read %}list-group-item-warning{% endif %}">
+                                                {{ notification.message }}
+                                                <small class="text-muted d-block">{{ notification.created_at|date:"F d, Y H:i" }}</small>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="hp-p1-body">No notifications available.</p>
+                                {% endif %}
+                            </div>
+
+                            <div id="identity-card" class="section" style="display: none;">
+                                <h2>Identity Card</h2>
+                                <div class="id-card-container">
+                                    <div class="id-card-flip">
+                                        <div class="id-card-front">
+                                            <div class="id-card-overlay"></div>
+                                            <div class="id-card-header">
+                                                <div class="school-logo">
+                                                    <img src="{% static 'main/images/logo.png' %}" alt="Rehoboth International School of Excellence">
+                                                </div>
+                                                <div class="school-info">
+                                                    <h3>Rehoboth International School of Excellence</h3>
+                                                </div>
+                                            </div>
+                                            <div class="id-card-body">
+                                                <div class="id-card-photo">
+                                                    {% if role == 'student' and student.photo %}
+                                                        <img src="{{ student.photo.url }}" alt="Photo">
+                                                    {% elif role == 'teacher' and teacher.photo %}
+                                                        <img src="{{ teacher.photo.url }}" alt="Photo">
+                                                    {% elif role == 'parent' and parent.photo %}
+                                                        <img src="{{ parent.photo.url }}" alt="Photo">
+                                                    {% else %}
+                                                        <img src="{% static 'accounts/app-assets/img/memoji/memoji-1.png' %}" alt="Default Photo">
+                                                    {% endif %}
+                                                </div>
+                                                <div class="id-card-details">
+                                                    {% if role == 'student' %}
+                                                        <div class="detail-item">
+                                                            <span class="label">Name:</span>
+                                                            <span class="value">{{ student.full_name }}</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Adm No:</span>
+                                                            <span class="value">{{ student.admission_number }}</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Class:</span>
+                                                            <span class="value">{{ student.current_section|default:"N/A" }}</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Session:</span>
+                                                            <span class="value">{{ session }}</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Gender:</span>
+                                                            <span class="value">{{ student.get_gender_display }}</span>
+                                                        </div>
+                                                    {% elif role == 'teacher' %}
+                                                        <div class="detail-item">
+                                                            <span class="label">Name:</span>
+                                                            <span class="value">{{ teacher.full_name }}</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Email:</span>
+                                                            <span class="value">{{ teacher.school_email }}</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Sections:</span>
+                                                            <span class="value">{% for section in assigned_sections %}{{ section }}{% if not forloop.last %}, {% endif %}{% empty %}None{% endfor %}</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Session:</span>
+                                                            <span class="value">{{ session }}</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Gender:</span>
+                                                            <span class="value">{{ teacher.get_gender_display|default:"N/A" }}</span>
+                                                        </div>
+                                                    {% elif role == 'parent' %}
+                                                        <div class="detail-item">
+                                                            <span class="label">Name:</span>
+                                                            <span class="value">{{ parent.full_name|default:parent.phone_number }}</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Phone:</span>
+                                                            <span class="value">{{ parent.phone_number }}</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Role:</span>
+                                                            <span class="value">Parent</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Session:</span>
+                                                            <span class="value">{{ session }}</span>
+                                                        </div>
+                                                    {% else %}
+                                                        <div class="detail-item">
+                                                            <span class="label">Name:</span>
+                                                            <span class="value">{{ admin_user.get_full_name|default:admin_user.username }}</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Username:</span>
+                                                            <span class="value">{{ admin_user.username }}</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Role:</span>
+                                                            <span class="value">Administrator</span>
+                                                        </div>
+                                                        <div class="detail-item">
+                                                            <span class="label">Session:</span>
+                                                            <span class="value">{{ session }}</span>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="id-card-back">
+                                            <div class="id-card-overlay"></div>
+                                            <div class="id-card-back-content">
+                                                <div class="qr-code">
+                                                    <div id="qrCode"></div>
+                                                </div>
+                                                <div class="signature">
+                                                    <img src="{% static 'accounts/app-assets/img/signature.png' %}" alt="School Authority Signature" class="signature-img">
+                                                    <div class="sign-line"></div>
+                                                    <span>School Authority</span>
+                                                </div>
+                                                <div class="back-details">
+                                                    <p class="valid-text">Valid for the {{ session }} Academic Session</p>
+                                                    <p class="return-text">If found, please return to:</p>
+                                                    <p class="contact-text">Rehoboth International School of Excellence</p>
+                                                    <p class="contact-text">Email: info@rehobothschool.edu</p>
+                                                    <p class="contact-text">Phone: +228 90 16 50 89, +228 90 01 60 77</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4 card-actions">
+                                    <button class="btn btn-primary" onclick="flipCard()">Flip Card</button>
+                                    <button class="btn btn-primary" onclick="downloadIdCard()">Download ID Card</button>
+                                    <button class="btn btn-secondary" onclick="printIdCard()">Print ID Card</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        .id-card-container {
+            display: flex;
+            justify-content: center;
+            padding: 40px 0;
+        }
+
+        .id-card-flip {
+            perspective: 1000px;
+            width: 516px;
+            height: 324px;
+        }
+
+        .id-card-front, .id-card-back {
+            width: 516px;
+            height: 324px;
+            background: linear-gradient(145deg, #2a4a8e 0%, #0d1e3b 100%);
+            border-radius: 24px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+            padding: 24px;
+            position: absolute;
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+            backface-visibility: hidden;
+            transition: transform 0.6s ease;
+        }
+
+        .id-card-front {
+            transform: rotateY(0deg);
+            z-index: 2;
+        }
+
+        .id-card-back {
+            transform: rotateY(180deg);
+            z-index: 1;
+        }
+
+        .id-card-flip.flipped .id-card-front {
+            transform: rotateY(-180deg);
+            z-index: 1;
+        }
+
+        .id-card-flip.flipped .id-card-back {
+            transform: rotateY(0deg);
+            z-index: 2;
+        }
+
+        .id-card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"%3E%3Cpath fill="rgba(255,255,255,0.05)" d="M0 0h100v100H0z"/%3E%3Ccircle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="2"/%3E%3C/svg%3E');
+            z-index: 0;
+        }
+
+        .id-card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 18px;
+            position: relative;
+            z-index: 1;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 12px;
+        }
+
+        .school-logo {
+            background: rgba(255,255,255,0.95);
+            border-radius: 50%;
+            width: 54px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            padding: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .school-logo img {
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+        }
+
+        .school-info h3 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            line-height: 1.2;
+        }
+
+        .school-info p {
+            margin: 3px 0 0;
+            font-size: 15px;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        .id-card-body {
+            display: flex;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            padding-bottom: 18px;
+        }
+
+        .id-card-photo {
+            margin-right: 18px;
+            background: #fff;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 3px solid rgba(255,255,255,0.6);
+            width: 120px;
+            height: 150px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }
+
+        .id-card-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .id-card-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .detail-item {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .detail-item .label {
+            font-size: 15px;
+            font-weight: 600;
+            min-width: 105px;
+            color: rgba(255,255,255,0.85);
+            text-transform: uppercase;
+        }
+
+        .detail-item .value {
+            font-size: 15px;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .id-card-back-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+            position: relative;
+            z-index: 1;
+            padding: 10px 0;
+        }
+
+        .qr-code {
+            margin-bottom: 10px;
+        }
+
+        .qr-code #qrCode {
+            width: 90px;
+            height: 90px;
+            border: 3px solid #fff;
+            border-radius: 6px;
+        }
+
+        .signature {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 0 10px;
+            margin: 5px 0;
+        }
+
+        .signature-img {
+            width: 70px;
+            height: 24px;
+            margin-bottom: 2px;
+        }
+
+        .sign-line {
+            width: 70px;
+            height: 0.5px;
+            background: rgba(255,255,255,0.85);
+            margin-bottom: 2px;
+        }
+
+        .signature span {
+            font-size: 10px;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .back-details {
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .valid-text {
+            font-size: 14px;
+            font-weight: 500;
+            margin: 0 0 12px;
+            opacity: 0.9;
+        }
+
+        .return-text {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 6px;
+            text-transform: uppercase;
+        }
+
+        .contact-text {
+            font-size: 12px;
+            font-weight: 400;
+            margin: 0;
+            opacity: 0.85;
+        }
+
+        .card-actions {
+            margin-top: 24px !important;
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .card-actions .btn {
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 12px 24px;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .card-actions .btn-primary {
+            background: #1a73e8;
+            border-color: #1a73e8;
+        }
+
+        .card-actions .btn-primary:hover {
+            background: #1557b0;
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+        }
+
+        .card-actions .btn-secondary {
+            background: #6c757d;
+            border-color: #6c757d;
+        }
+
+        .card-actions .btn-secondary:hover {
+            background: #5a6268;
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+
+        /* Password toggle styles */
+        .password-toggle {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .password-toggle i {
+            font-size: 1.2rem;
+            color: #6c757d;
+        }
+
+        .password-toggle:hover i {
+            color: #1a73e8;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .id-card-container, .id-card-container * {
+                visibility: visible;
+            }
+            .id-card-container {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .id-card-front, .id-card-back {
+                transform: none !important;
+                box-shadow: none;
+                border: none;
+                width: 86mm;
+                height: 54mm;
+                padding: 6mm;
+            }
+            .id-card-back {
+                display: none;
+            }
+            .id-card-header {
+                margin-bottom: 4.5mm;
+                padding-bottom: 3mm;
+            }
+            .school-logo {
+                width: 13.5mm;
+                height: 13.5mm;
+                margin-right: 3.75mm;
+                padding: 1.5mm;
+            }
+            .school-logo img {
+                width: 10.5mm;
+                height: 10.5mm;
+            }
+            .school-info h3 {
+                font-size: 5mm;
+                letter-spacing: 0.3mm;
+            }
+            .school-info p {
+                font-size: 3.75mm;
+                margin-top: 0.75mm;
+            }
+            .id-card-body {
+                padding-bottom: 4.5mm;
+            }
+            .id-card-photo {
+                margin-right: 4.5mm;
+                border-width: 0.75mm;
+                width: 30mm;
+                height: 37.5mm;
+                border-radius: 3.75mm;
+            }
+            .detail-item {
+                margin-bottom: 1.25mm;
+            }
+            .detail-item .label {
+                font-size: 3.75mm;
+                min-width: 26.25mm;
+            }
+            .detail-item .value {
+                font-size: 3.75mm;
+            }
+            .id-card-back-content {
+                padding: 2.5mm 0;
+            }
+            .qr-code {
+                margin-bottom: 2.5mm;
+            }
+            .qr-code #qrCode {
+                width: 22.5mm;
+                height: 22.5mm;
+                border-width: 0.75mm;
+                border-radius: 1.5mm;
+            }
+            .signature {
+                width: 100%;
+                padding: 0 2.5mm;
+                margin: 1.25mm 0;
+            }
+            .signature-img {
+                width: 17.5mm;
+                height: 6mm;
+                margin-bottom: 0.5mm;
+            }
+            .sign-line {
+                width: 17.5mm;
+                height: 0.125mm;
+                margin-bottom: 0.5mm;
+            }
+            .signature span {
+                font-size: 2.5mm;
+            }
+            .valid-text {
+                font-size: 3.5mm;
+                margin-bottom: 3mm;
+            }
+            .return-text {
+                font-size: 3.5mm;
+                margin-bottom: 1.5mm;
+            }
+            .contact-text {
+                font-size: 3mm;
+            }
+        }
+    </style>
+
+    <!-- External Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.4.4/qrcode.min.js"></script>
+
+    <!-- Bootstrap Icons CDN for eye/eye-slash icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <script>
+        // Menu navigation
+        document.querySelectorAll('.hp-profile-menu-body a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const sectionId = this.getAttribute('data-section');
+                document.querySelectorAll('.section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                document.getElementById(sectionId).style.display = 'block';
+                document.querySelectorAll('.hp-profile-menu-body a').forEach(a => {
+                    a.classList.remove('active');
+                    a.querySelector('.hp-menu-item-line').style.opacity = '0';
+                });
+                this.classList.add('active');
+                this.querySelector('.hp-menu-item-line').style.opacity = '1';
+            });
+        });
+
+        document.getElementById('personal-info').style.display = 'block';
+
+        // Generate QR code
+        const qrCodeContainer = document.getElementById('qrCode');
+        const qr = qrcode(0, 'M');
+        const qrData = `{% if role == 'student' %}
+            Name: {{ student.full_name }}
+            Admission No: {{ student.admission_number }}
+            Class: {{ student.current_section|default:"N/A" }}
+            Session: {{ session }}
+        {% elif role == 'teacher' %}
+            Name: {{ teacher.full_name }}
+            Email: {{ teacher.school_email }}
+            Session: {{ session }}
+        {% elif role == 'parent' %}
+            Name: {{ parent.full_name|default:parent.phone_number }}
+            Phone: {{ parent.phone_number }}
+            Role: Parent
+            Session: {{ session }}
+        {% else %}
+            Name: {{ admin_user.get_full_name|default:admin_user.username }}
+            Role: Administrator
+            Session: {{ session }}
+        {% endif %}`;
+        qr.addData(qrData);
+        qr.make();
+        qrCodeContainer.innerHTML = qr.createSvgTag({ scalable: true });
+
+        // Flip card functionality
+        function flipCard() {
+            const flipContainer = document.querySelector('.id-card-flip');
+            flipContainer.classList.toggle('flipped');
+        }
+
+        function downloadIdCard() {
+            const front = document.querySelector('.id-card-front');
+            const back = document.querySelector('.id-card-back');
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: [86, 54]
+            });
+
+            html2canvas(front, {
+                scale: 4,
+                useCORS: true,
+                backgroundColor: null
+            }).then(canvas => {
+                const imgDataFront = canvas.toDataURL('image/png', 1.0);
+                pdf.addImage(imgDataFront, 'PNG', 0, 0, 86, 54, undefined, 'FAST');
+
+                html2canvas(back, {
+                    scale: 4,
+                    useCORS: true,
+                    backgroundColor: null
+                }).then(canvasBack => {
+                    pdf.addPage([86, 54], 'landscape');
+                    const imgDataBack = canvasBack.toDataURL('image/png', 1.0);
+                    pdf.addImage(imgDataBack, 'PNG', 0, 0, 86, 54, undefined, 'FAST');
+                    pdf.save('identity-card.pdf');
+                });
+            });
+        }
+
+        function printIdCard() {
+            const front = document.querySelector('.id-card-front');
+            const back = document.querySelector('.id-card-back');
+            html2canvas(front, {
+                scale: 4,
+                useCORS: true,
+                backgroundColor: null
+            }).then(canvasFront => {
+                const imgDataFront = canvasFront.toDataURL('image/png', 1.0);
+                html2canvas(back, {
+                    scale: 4,
+                    useCORS: true,
+                    backgroundColor: null
+                }).then(canvasBack => {
+                    const imgDataBack = canvasBack.toDataURL('image/png', 1.0);
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(`
+                        <html>
+                            <head>
+                                <title>Print Identity Card</title>
+                                <style>
+                                    body {
+                                        margin: 0;
+                                        display: flex;
+                                        flex-direction: column;
+                                        align-items: center;
+                                        justify-content: center;
+                                        height: 100vh;
+                                        background: #fff;
+                                    }
+                                    img {
+                                        width: 86mm;
+                                        height: 54mm;
+                                        object-fit: contain;
+                                        margin: 10px;
+                                    }
+                                    @media print {
+                                        body {
+                                            margin: 0;
+                                        }
+                                        img {
+                                            width: 86mm;
+                                            height: 54mm;
+                                        }
+                                        .back {
+                                            page-break-before: always;
+                                        }
+                                    }
+                                </style>
+                            </head>
+                            <body>
+                                <img src="${imgDataFront}" class="front">
+                                <img src="${imgDataBack}" class="back">
+                            </body>
+                        </html>
+                    `);
+                    printWindow.document.close();
+                    printWindow.onload = () => {
+                        printWindow.print();
+                        printWindow.close();
+                    };
+                });
+            });
+        }
+
+        function togglePassword(inputId, toggleElement) {
+            const input = document.getElementById(inputId);
+            const icon = toggleElement.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            }
+        }
+    </script>
+{% endblock content %}
