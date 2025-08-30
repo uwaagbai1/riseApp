@@ -363,10 +363,11 @@ class Teacher(models.Model):
 
     def save(self, *args, **kwargs):
         if self.user:
+            self.user.username = self.school_email
+            self.user.email = self.school_email
             self.user.is_active = self.is_active
             self.user.first_name = self.first_name
             self.user.last_name = self.surname
-            self.user.email = self.school_email
             self.user.save()
         super().save(*args, **kwargs)
 

@@ -416,11 +416,12 @@ def admin_teacher_management(request):
                 form_errors.append('A teacher with this email already exists.')
                 raise ValidationError('Email already exists')
 
-            username = school_email.split('@')[0]
+            # Use email as username and generate random password
+            username = school_email
             password = get_random_string(12)
             
             user = User.objects.create_user(
-                username=username,
+                username=username,  # Email as username
                 email=school_email,
                 password=password,
                 first_name=first_name,
@@ -440,14 +441,28 @@ def admin_teacher_management(request):
             )
             teacher.save()
 
-            messages.success(
-                request,
-                f'Teacher {teacher.full_name} registered with email {school_email}. '
-                f'Username: {username}, Password: {password}'
-            )
+            # Send password via email
+            try:
+                send_teacher_credentials_email(teacher, password)
+                email_sent = True
+                email_message = "Login credentials sent to email."
+            except Exception as email_error:
+                email_sent = False
+                email_message = f"Email sending failed: {str(email_error)}"
+                logger.error(f"Failed to send email to {school_email}: {str(email_error)}")
+
+            # Success message
+            success_msg = f'Teacher {teacher.full_name} registered successfully. '
+            if email_sent:
+                success_msg += email_message
+            else:
+                success_msg += f'Password: {password} (Email failed to send)'
+            
+            messages.success(request, success_msg)
+            
             Notification.objects.create(
                 user=request.user,
-                message=f"Teacher {teacher.full_name} registered."
+                message=f"Teacher {teacher.full_name} registered. {email_message}"
             )
             logger.info(f"Admin {request.user.username} registered teacher {teacher.full_name}")
             return redirect('admin_teacher_management')
@@ -552,7 +567,7 @@ from django.core.paginator import Paginator
 from django.utils import timezone
 from accounts.models import Student, SchoolClass, ClassSection, Session, Notification, StudentClassHistory
 from accounts.decorators import group_required
-from accounts.utils.index import get_current_session_term
+from accounts.utils.index import get_current_session_term, send_teacher_credentials_email
 from .base import get_user_context, logger
 
 @login_required

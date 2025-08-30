@@ -1,9 +1,15 @@
 from datetime import date
+import logging
 
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.conf import settings
 
 from accounts.models import Session, TermConfiguration
+
+logger = logging.getLogger(__name__)
 
 def get_current_session_term():
     """
@@ -106,3 +112,113 @@ def get_next_term_start_date(current_session, current_term):
     elif current_term == '3':
         return date(current_session.start_year + 1, 9, 1)
     return "TBD"
+
+
+
+def send_teacher_credentials_email(teacher, password):
+    """
+    Send login credentials to newly registered teacher
+    """
+    subject = f'Welcome to {getattr(settings, "SCHOOL_NAME", "School")} - Your Login Credentials'
+    
+    # Create email content
+    context = {
+        'teacher_name': teacher.full_name,
+        'school_name': getattr(settings, 'SCHOOL_NAME', 'School'),
+        'username': teacher.school_email,
+        'password': password,
+        'login_url': getattr(settings, 'LOGIN_URL', '/login/'),
+        'support_email': getattr(settings, 'SUPPORT_EMAIL', 'support@school.com')
+    }
+    
+    # HTML email template
+    html_message = render_to_string('emails/teacher_credentials.html', context)
+    
+    # Plain text fallback
+    plain_message = f"""
+    Welcome to {context['school_name']}!
+
+    Dear {teacher.full_name},
+
+    Your teacher account has been successfully created. Here are your login credentials:
+
+    Username: {teacher.school_email}
+    Password: {password}
+
+    Please log in at: {context['login_url']}
+
+    IMPORTANT: Please change your password after your first login for security purposes.
+
+    If you have any questions, please contact us at: {context['support_email']}
+
+    Best regards,
+    {context['school_name']} Administration Team
+    """
+    
+    try:
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[teacher.school_email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        logger.info(f"Credentials email sent successfully to {teacher.school_email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send credentials email to {teacher.school_email}: {str(e)}")
+        raise e
+
+
+def send_password_reset_email(teacher, new_password):
+    """
+    Send new password when admin resets teacher password
+    """
+    subject = f'{getattr(settings, "SCHOOL_NAME", "School")} - Password Reset'
+    
+    context = {
+        'teacher_name': teacher.full_name,
+        'school_name': getattr(settings, 'SCHOOL_NAME', 'School'),
+        'username': teacher.school_email,
+        'new_password': new_password,
+        'login_url': getattr(settings, 'LOGIN_URL', '/login/'),
+        'support_email': getattr(settings, 'SUPPORT_EMAIL', 'support@school.com')
+    }
+    
+    html_message = render_to_string('emails/teacher_password_reset.html', context)
+    
+    plain_message = f"""
+    Password Reset - {context['school_name']}
+
+    Dear {teacher.full_name},
+
+    Your password has been reset by the administrator. Here are your new login credentials:
+
+    Username: {teacher.school_email}
+    New Password: {new_password}
+
+    Please log in at: {context['login_url']}
+
+    IMPORTANT: Please change your password after logging in for security purposes.
+
+    If you did not request this password reset, please contact us immediately at: {context['support_email']}
+
+    Best regards,
+    {context['school_name']} Administration Team
+    """
+    
+    try:
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[teacher.school_email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        logger.info(f"Password reset email sent successfully to {teacher.school_email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send password reset email to {teacher.school_email}: {str(e)}")
+        raise e
