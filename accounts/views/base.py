@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.template import TemplateSyntaxError
+from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.template.loader import render_to_string
@@ -439,20 +439,32 @@ def generate_payment_receipt(request, payment_id):
 
 def handler400(request, exception):
     logger.error(f"Bad request: {exception}")
-    return render(request, 'account/errors/400.html', status=400)
+    try:
+        return render(request, 'account/errors/400.html', status=400)
+    except TemplateDoesNotExist:
+        logger.error("Template 'account/errors/400.html' not found")
+        return HttpResponse("Bad Request", status=400)
 
 def handler403(request, exception):
     logger.error(f"Permission denied: {exception}")
-    return render(request, 'account/errors/403.html', status=403)
+    try:
+        return render(request, 'account/errors/403.html', status=403)
+    except TemplateDoesNotExist:
+        logger.error("Template 'account/errors/403.html' not found")
+        return HttpResponse("Forbidden", status=403)
 
 def handler404(request, exception):
     logger.error(f"Page not found: {exception}")
-    return render(request, 'account/errors/404.html', status=404)
+    try:
+        return render(request, 'account/errors/404.html', status=404)
+    except TemplateDoesNotExist:
+        logger.error("Template 'account/errors/404.html' not found")
+        return HttpResponse("Not Found", status=404)
 
 def handler500(request):
-    logger.error("Server error occurred")
-    return render(request, 'account/errors/500.html', status=500)
-
-def handle_template_does_not_exist(request, exception):
-    logger.error(f"Template not found: {exception}")
-    return render(request, 'account/errors/500.html', status=500)
+    logger.error("Server error occurred", exc_info=True)
+    try:
+        return render(request, 'account/errors/500.html', status=500)
+    except TemplateDoesNotExist:
+        logger.error("Template 'account/errors/500.html' not found")
+        return HttpResponse("Internal Server Error", status=500)

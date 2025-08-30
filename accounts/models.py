@@ -180,13 +180,25 @@ class Parent(models.Model):
     def get_payment_status_for_term(self, session, term):
         """Check payment status for a session and term, including refunds."""
         total_fees = self.get_total_fees_for_term(session, term)
-        payments = self.payments.filter(session=session, term=term).aggregate(total_paid=Sum('amount'))
-        refunds = Refund.objects.filter(parent=self, session=session, term=term).aggregate(total_refunded=Sum('amount'))['total_refunded'] or Decimal(0)
+        payments = self.payments.filter(
+            session=session,
+            term=term,
+            status='Completed'
+        ).aggregate(total_paid=Sum('amount'))
+        refunds = Refund.objects.filter(
+            parent=self,
+            session=session,
+            term=term
+        ).aggregate(total_refunded=Sum('amount'))['total_refunded'] or Decimal(0)
         amount_paid = (payments['total_paid'] or Decimal(0)) - refunds
+        if amount_paid < 0:
+            amount_paid = Decimal(0)  # Prevent negative paid amounts
+        amount_due = max(total_fees - amount_paid, Decimal(0))
         return {
-            'status': 'Completed' if amount_paid >= total_fees else 'Partial' if amount_paid > 0 else 'Pending',
+            'status': 'Completed' if amount_due <= 0 else 'Partial' if amount_paid > 0 else 'Pending',
             'amount_paid': amount_paid,
-            'amount_due': max(total_fees - amount_paid, Decimal(0))
+            'amount_due': amount_due,
+            'total_fees': total_fees
         }
 
     def has_completed_previous_term_payments(self, session, term):

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html dir="ltr">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <link rel="icon" type="image/png" href="{% static 'main/images/favicon.svg' %}">
+    <meta name="theme-color" content="#ffffff">
+
+    <link href="{% static 'accounts/fonts.googleapis.com/css2496c.css?family=Poppins:wght@300;400;500;600;700&amp;display=swap' %}" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/plugin/swiper-bundle.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/icons/iconly/index.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/icons/remix-icon/index.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/bootstrap.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/colors.css' %}">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/base/typography.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/base/base.css' %}">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/theme/colors-dark.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/theme/theme-dark.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/custom-rtl.css' %}">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/layouts/sider.css' %}">
+    <link rel="stylesheet" type="text/type" href="{% static 'accounts/app-assets/css/layouts/header.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/layouts/page-content.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/components.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/layouts/customizer.css' %}">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/app-assets/css/pages/page-error.css' %}">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'accounts/assets/css/style.css' %}">
+
+    <title>403 - RISE</title>
+</head>
+
+<body>
+    <div class="row text-center overflow-hidden">
+        <div class="position-absolute w-100 h-100" style="top: 0px; left: 0px; z-index: -1;">
+            <svg width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg" class="hp-stroke-color-dark-90">
+                <path d="M3574 1540L907.175 -134.641L1053.03 429.011L387.731 -53.7583L937.881 929.474L32.0529 297.577L254.672 889.032L-2135.09 -460" stroke="#F7FAFC" stroke-width="100" stroke-linejoin="bevel"></path>
+            </svg>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-center border-bottom hp-border-color-dark-60 py-16 col-12">
+            <div class="hp-header-logo d-flex align-items-center">
+                <a href="/" class="position-relative">
+                    <img src="{% static 'main/images/logo.png' %}" alt="school logo" height="120" width="120">
+                </a>
+
+                <a href="/" target="_blank" class="d-flex">
+                    <span class="hp-sidebar-hidden hp-caption fw-normal hp-text-color-primary-1">v.1.0</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="hp-error-content py-32 col-12">
+            <div class="row h-100 align-items-center justify-content-center">
+                <div class="col">
+                    <h1 class="hp-error-content-title fw-light hp-text-color-black-bg hp-text-color-dark-0 mb-0">403</h1>
+
+                    <h2 class="h1 mb-16">Forbidden</h2>
+
+                    <p class="mb-32 hp-p1-body hp-text-color-black-100 hp-text-color-dark-0">You don't have permission to access this page.</p>
+
+                    <button onclick="history.back()" class="btn btn-primary">
+                        <span>Back</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="py-32 col-12">
+            <p class="mb-8 hp-p1-body hp-text-color-black-60">COPYRIGHT © {% now "Y" %} {{ settings.SCHOOL_NAME|default:"Rehoboth International School of Excellence" }}, All rights Reserved</p>
+
+            <div class="row mb-n8 align-items-center justify-content-center">
+                <div class="w-auto hp-flex-none px-8 col">
+                    <a href="javascript:;" class="hp-p1-body hp-text-color-black-80 hp-hover-text-color-primary-1">Privacy Policy</a>
+                </div>
+
+                <div class="w-auto hp-flex-none px-8 col">
+                    <a href="javascript:;" class="hp-p1-body hp-text-color-black-80 hp-hover-text-color-primary-1">Term of use</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'accounts/app-assets/js/plugin/jquery.min.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/plugin/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/plugin/swiper-bundle.min.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/plugin/jquery.mask.min.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/plugin/autocomplete.min.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/plugin/moment.min.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/layouts/header-search.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/layouts/sider.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/components/input-number.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/base/index.js' %}"></script>
+    <script src="{% static 'accounts/app-assets/js/customizer.js' %}"></script>
+    <script src="{% static 'accounts/assets/js/main.js' %}"></script>
+</body>
+</html>

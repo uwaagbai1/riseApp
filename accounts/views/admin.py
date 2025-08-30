@@ -1,3 +1,4 @@
+from collections import defaultdict
 import uuid
 import re
 
@@ -2361,7 +2362,6 @@ def admin_fee_statistics(request):
 
     stats_data = []
     total_expected = Decimal(0)
-    total_paid = Decimal(0)
 
     fee_structures = FeeStructure.objects.filter(
         session=session, term=term
@@ -2374,14 +2374,83 @@ def admin_fee_statistics(request):
         count=Count('pk')
     )
 
-    payment_sums = Payment.objects.filter(
-        session=session, term=term, students__is_active=True
-    ).values('students__current_class__level').annotate(
-        total_paid=Sum('amount')
+    student_count_by_class = {item['current_class__level']: item['count'] for item in student_counts}
+
+    total_paid = Payment.objects.filter(
+        session=session,
+        term=term,
+        status='Completed'
+    ).aggregate(total=Sum('amount'))['total'] or Decimal(0)
+    total_refunds = Refund.objects.filter(
+        session=session,
+        term=term
+    ).aggregate(total=Sum('amount'))['total'] or Decimal(0)
+    total_paid -= total_refunds
+    if total_paid < 0:
+        total_paid = Decimal(0)
+
+    payment_by_class = defaultdict(Decimal)
+    payments = Payment.objects.filter(
+        session=session, term=term, status='Completed'
+    ).prefetch_related(
+        Prefetch('students', queryset=Student.objects.filter(is_active=True, current_class__isnull=False).select_related('current_class'))
     )
 
-    student_count_by_class = {item['current_class__level']: item['count'] for item in student_counts}
-    payment_by_class = {item['students__current_class__level']: item['total_paid'] for item in payment_sums}
+    for payment in payments:
+        students = payment.students.all()
+        num_students = students.count()
+        if num_students == 0:
+            continue
+        student_fees = {}
+        total_student_fees = Decimal(0)
+        for student in students:
+            override = student.fee_overrides.filter(session=session, term=term).first()
+            fee_amount = override.amount if override else (
+                fee_structures.filter(class_level=student.current_class).first().amount
+                if fee_structures.filter(class_level=student.current_class).exists()
+                else Decimal(0)
+            )
+            student_fees[student.admission_number] = fee_amount
+            total_student_fees += fee_amount
+        if total_student_fees == 0:
+            amount_per_student = payment.amount / num_students
+            for student in students:
+                payment_by_class[student.current_class.level] += amount_per_student
+        else:
+            for student in students:
+                proportion = student_fees[student.admission_number] / total_student_fees
+                payment_by_class[student.current_class.level] += payment.amount * proportion
+
+    refunds = Refund.objects.filter(
+        session=session, term=term
+    ).select_related('parent').prefetch_related(
+        Prefetch('parent__students', queryset=Student.objects.filter(is_active=True, current_class__isnull=False).select_related('current_class'))
+    )
+
+    for refund in refunds:
+        students = refund.parent.students.all()
+        num_students = students.count()
+        if num_students == 0:
+            continue
+        student_fees = {}
+        total_student_fees = Decimal(0)
+        for student in students:
+            override = student.fee_overrides.filter(session=session, term=term).first()
+            fee_amount = override.amount if override else (
+                fee_structures.filter(class_level=student.current_class).first().amount
+                if fee_structures.filter(class_level=student.current_class).exists()
+                else Decimal(0)
+            )
+            student_fees[student.admission_number] = fee_amount
+            total_student_fees += fee_amount
+        if total_student_fees == 0:
+            amount_per_student = refund.amount / num_students
+            for student in students:
+                payment_by_class[student.current_class.level] -= amount_per_student
+        else:
+            for student in students:
+                proportion = student_fees[student.admission_number] / total_student_fees
+                payment_by_class[student.current_class.level] -= refund.amount * proportion
 
     for section, class_levels in section_mappings.items():
         section_expected = Decimal(0)
@@ -2399,18 +2468,11 @@ def admin_fee_statistics(request):
             class_expected = fee_amount * class_student_count
             section_expected += class_expected
 
-            class_paid = payment_by_class.get(class_level, Decimal(0))
-            class_paid = min(class_paid, class_expected)
+            class_paid = max(payment_by_class.get(class_level, Decimal(0)), Decimal(0))
             section_paid += class_paid
 
             logger.debug('Class: %s, Students: %s, Expected: %s, Paid: %s', 
                          class_level, class_student_count, class_expected, class_paid)
-
-        if term == '1':
-            pta_dues = PTADues.objects.filter(session=session, term=term).first()
-            pta_amount = pta_dues.amount if pta_dues else Decimal('2000.00')
-            section_expected += pta_amount * student_count
-            logger.debug('Section: %s, PTA Dues: %s', section, pta_amount)
 
         percentage_paid = (section_paid / section_expected * 100) if section_expected > 0 else 0
         stats_data.append({
@@ -2423,7 +2485,28 @@ def admin_fee_statistics(request):
         })
 
         total_expected += section_expected
-        total_paid += section_paid
+
+    # Add PTA dues to total_expected
+    if term == '1':
+        pta_dues = PTADues.objects.filter(session=session, term=term).first()
+        pta_amount = pta_dues.amount if pta_dues else Decimal('2000.00')
+        num_parents = Parent.objects.filter(
+            students__is_active=True,
+            students__current_class__isnull=False,
+            students__enrollment_year__lte=session.end_year
+        ).distinct().count()
+        pta_expected = pta_amount * num_parents
+        total_expected += pta_expected
+        logger.debug('PTA Expected: %s (for %s parents)', pta_expected, num_parents)
+
+        stats_data.append({
+            'section': 'PTA Dues',
+            'expected': float(pta_expected),
+            'paid': 0.0,
+            'outstanding': float(pta_expected),
+            'percentage_paid': 0,
+            'student_count': num_parents
+        })
 
     total_outstanding = total_expected - total_paid
     total_percentage_paid = (total_paid / total_expected * 100) if total_expected > 0 else 0
