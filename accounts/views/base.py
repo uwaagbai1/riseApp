@@ -99,11 +99,14 @@ def get_class_sections(request):
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
+    
     if request.method == 'POST':
         login_type = request.POST.get('login_type')
+        
         if login_type == 'parent':
-            phone_number = request.POST.get('phone_number')
-            password = request.POST.get('password')
+            phone_number = request.POST.get('phone_number', '').strip()
+            password = request.POST.get('password', '').strip()
+            
             user = authenticate(request, phone_number=phone_number, password=password)
             if user and hasattr(user, 'parent'):
                 login(request, user)
@@ -112,8 +115,9 @@ def login_view(request):
             messages.error(request, 'Invalid phone number or password.')
             return render(request, 'account/login.html', {'login_type': 'parent'})
         else:
-            username = request.POST.get('username')
-            password = request.POST.get('password')
+            username = request.POST.get('username', '').strip().lower()
+            password = request.POST.get('password', '').strip()
+            
             user = authenticate(request, username=username, password=password)
             if user:
                 if (hasattr(user, 'student') and not user.student.is_active) or \
@@ -121,11 +125,15 @@ def login_view(request):
                     messages.error(request, 'Your account is deactivated. Please contact the administrator.')
                     logger.warning(f"Deactivated user {username} attempted login")
                     return render(request, 'account/login.html')
+                
                 login(request, user)
                 logger.info(f"User {username} logged in successfully")
                 return redirect('dashboard')
+            
             messages.error(request, 'Invalid admission number/token or username/password')
             logger.warning(f"Failed login attempt for {username}")
+            return render(request, 'account/login.html')
+    
     return render(request, 'account/login.html')
 
 @login_required
