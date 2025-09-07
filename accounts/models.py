@@ -149,8 +149,11 @@ class Parent(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        indexes = [models.Index(fields=['phone_number'])]
-
+        indexes = [
+            models.Index(fields=['phone_number']),
+            models.Index(fields=['is_active']),
+        ]
+        
     def __str__(self):
         return self.full_name or self.phone_number
 
@@ -192,7 +195,7 @@ class Parent(models.Model):
         ).aggregate(total_refunded=Sum('amount'))['total_refunded'] or Decimal(0)
         amount_paid = (payments['total_paid'] or Decimal(0)) - refunds
         if amount_paid < 0:
-            amount_paid = Decimal(0)  # Prevent negative paid amounts
+            amount_paid = Decimal(0)
         amount_due = max(total_fees - amount_paid, Decimal(0))
         return {
             'status': 'Completed' if amount_due <= 0 else 'Partial' if amount_paid > 0 else 'Pending',
@@ -344,6 +347,7 @@ class Student(models.Model):
             models.Index(fields=['first_name']),  
             models.Index(fields=['middle_name']),  
             models.Index(fields=['surname']),  
+            models.Index(fields=['parent', 'is_active']),
         ]
 
 class Teacher(models.Model):
@@ -644,6 +648,7 @@ class FeeStructure(models.Model):
         unique_together = ('session', 'term', 'class_level')
         indexes = [
             models.Index(fields=['session', 'term', 'class_level']),
+            models.Index(fields=['session', 'term']),
         ]
 
     def __str__(self):
@@ -667,6 +672,7 @@ class StudentFeeOverride(models.Model):
         unique_together = ('student', 'session', 'term')
         indexes = [
             models.Index(fields=['student', 'session', 'term']),
+            models.Index(fields=['session', 'term']),
         ]
 
     def __str__(self):
@@ -689,6 +695,7 @@ class Refund(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=['parent', 'session', 'term']),
+            models.Index(fields=['session', 'term']),
         ]
 
     def __str__(self):
@@ -712,6 +719,7 @@ class Payment(models.Model):
         indexes = [
             models.Index(fields=['transaction_id']),
             models.Index(fields=['parent', 'session', 'term']),
+            models.Index(fields=['parent', 'session', 'term', 'status']),
         ]
 
     def calculate_total_fee(self):

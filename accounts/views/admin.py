@@ -1,12 +1,10 @@
-from collections import defaultdict
-import uuid
 import re
 
 from datetime import date, datetime
-from itertools import groupby
 from urllib.parse import urlencode
 from decimal import Decimal
 from weasyprint import HTML
+from collections import defaultdict
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -23,6 +21,7 @@ from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.core import management
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.cache import cache
 
 from accounts.decorators import group_required
 from accounts.models import FeeStructure, PTADues, Refund, ResultAccessRequest, Student, StudentFeeOverride, Teacher, Result, Payment, SchoolClass, Subject, Notification, Session, ClassSection, TERM_CHOICES, StudentSubject, Parent
@@ -367,18 +366,16 @@ def admin_teacher_management(request):
             to_attr='current_sections'
         )
     )
-
     form_data = {}
     form_errors = []
-
     if request.method == 'POST':
         try:
-            first_name = request.POST.get('first_name')
-            middle_name = request.POST.get('middle_name')
-            surname = request.POST.get('surname')
-            school_email = request.POST.get('school_email')
+            first_name = request.POST.get('first_name').strip()
+            middle_name = request.POST.get('middle_name').strip()
+            surname = request.POST.get('surname').strip()
+            school_email = request.POST.get('school_email').strip()
             gender = request.POST.get('gender')
-            nationality = request.POST.get('nationality')
+            nationality = request.POST.get('nationality').strip()
             photo = request.FILES.get('photo')
 
             form_data = {
@@ -416,18 +413,17 @@ def admin_teacher_management(request):
                 form_errors.append('A teacher with this email already exists.')
                 raise ValidationError('Email already exists')
 
-            # Use email as username and generate random password
+            
             username = school_email
             password = get_random_string(12)
             
             user = User.objects.create_user(
-                username=username,  # Email as username
+                username=username,  
                 email=school_email,
                 password=password,
                 first_name=first_name,
                 last_name=surname
             )
-
             teacher = Teacher(
                 user=user,
                 first_name=first_name,
@@ -440,8 +436,6 @@ def admin_teacher_management(request):
                 is_active=True
             )
             teacher.save()
-
-            # Send password via email
             try:
                 send_teacher_credentials_email(teacher, password)
                 email_sent = True
@@ -451,7 +445,6 @@ def admin_teacher_management(request):
                 email_message = f"Email sending failed: {str(email_error)}"
                 logger.error(f"Failed to send email to {school_email}: {str(email_error)}")
 
-            # Success message
             success_msg = f'Teacher {teacher.full_name} registered successfully. '
             if email_sent:
                 success_msg += email_message
@@ -476,7 +469,7 @@ def admin_teacher_management(request):
             messages.error(request, 'An unexpected error occurred.')
             logger.error(f"Unexpected error registering teacher: {str(e)}")
 
-    paginator = Paginator(teachers, 25)
+    paginator = Paginator(teachers, 50)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
@@ -1022,7 +1015,7 @@ def update_student(request, admission_number):
     if request.method == 'POST':
         try:
             with transaction.atomic():
-                # Update student fields
+                
                 student.first_name = request.POST.get('first_name', '').strip()
                 student.middle_name = request.POST.get('middle_name', '').strip()
                 student.surname = request.POST.get('surname', '').strip()
@@ -1034,29 +1027,29 @@ def update_student(request, admission_number):
                 student.enrollment_year = request.POST.get('enrollment_year')
                 student.is_active = request.POST.get('is_active') == 'on'
 
-                # Handle class
+                
                 class_id = request.POST.get('class')
                 student.current_class = SchoolClass.objects.get(id=class_id) if class_id else None
-                student.current_section = None  # Section removed from form
+                student.current_section = None  
 
-                # Handle photo upload
+                
                 if 'photo' in request.FILES:
                     student.photo = request.FILES['photo']
 
-                # Validate student data
+                
                 student.clean()
 
-                # Update User model
+                
                 if student.user:
                     student.user.first_name = student.first_name
                     student.user.last_name = student.surname
                     student.user.is_active = student.is_active
                     student.user.save()
 
-                # Save student
+                
                 student.save()
 
-                # Update class history
+                
                 if student.current_class and current_session:
                     history, created = StudentClassHistory.objects.get_or_create(
                         student=student,
@@ -1974,18 +1967,22 @@ def admin_create_payment(request):
         if term not in [t[0] for t in TERM_CHOICES]:
             return JsonResponse({'error': 'Invalid term'}, status=400)
 
-        
         if not parent.has_completed_previous_term_payments(session, term):
             return JsonResponse({'error': 'Previous term payments incomplete. Please clear outstanding balance.'}, status=400)
+
+        should_invalidate_cache = False
 
         if action == 'create':
             amount = Decimal(amount)
             if amount <= 0:
                 return JsonResponse({'error': 'Amount must be greater than 0'}, status=400)
+            
             total_fees = parent.get_total_fees_for_term(session, term)
             payment_status = parent.get_payment_status_for_term(session, term)
+            
             if amount > (payment_status['amount_due'] + payment_status['amount_paid']):
                 return JsonResponse({'error': f'Amount cannot exceed total fees {total_fees} XOF'}, status=400)
+            
             payment = Payment.objects.create(
                 parent=parent,
                 session=session,
@@ -1995,38 +1992,67 @@ def admin_create_payment(request):
             )
             payment.students.set(parent.students.filter(is_active=True))
             message = f'Payment of {amount} XOF recorded for {parent.full_name or parent.phone_number}'
+            should_invalidate_cache = True
+            
         elif action == 'edit':
             payment_id = request.POST.get('payment_id')
             if not payment_id:
                 return JsonResponse({'error': 'Payment ID required for editing'}, status=400)
+            
             payment = Payment.objects.get(id=payment_id, parent=parent, session=session, term=term)
             amount = Decimal(amount)
+            
             if amount < 0:
                 return JsonResponse({'error': 'Amount cannot be negative'}, status=400)
+            
             total_fees = parent.get_total_fees_for_term(session, term)
-            other_payments = Payment.objects.filter(parent=parent, session=session, term=term).exclude(id=payment_id).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            other_payments = Payment.objects.filter(
+                parent=parent, 
+                session=session, 
+                term=term
+            ).exclude(id=payment_id).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            
             if amount + other_payments > total_fees:
                 return JsonResponse({'error': f'New amount plus other payments cannot exceed total fees {total_fees} XOF'}, status=400)
+            
+            # Store old amount to check if there's a significant change
+            old_amount = payment.amount
+            
             payment.amount = amount
             payment.status = 'Completed' if amount > 0 else 'Cancelled'
             payment.save()
             message = f'Payment of {amount} XOF updated for {parent.full_name or parent.phone_number}'
+            
+            
+            if old_amount != amount:
+                should_invalidate_cache = True
+                
         elif action == 'delete':
             payment_id = request.POST.get('payment_id')
             if not payment_id:
                 return JsonResponse({'error': 'Payment ID required for deletion'}, status=400)
+            
             payment = Payment.objects.get(id=payment_id, parent=parent, session=session, term=term)
+            transaction_id = payment.transaction_id
             payment.delete()
-            message = f'Payment {payment.transaction_id} deleted for {parent.full_name or parent.phone_number}'
+            message = f'Payment {transaction_id} deleted for {parent.full_name or parent.phone_number}'
+            should_invalidate_cache = True
+            
         else:
             return JsonResponse({'error': 'Invalid action'}, status=400)
 
+        if should_invalidate_cache:
+            invalidate_payment_report_cache(session, term)
+            logger.info(f"Cache invalidated due to payment {action} for parent {parent.phone_number}")
+        
         pta_dues = Decimal('0')
         if term == '1':
             pta_dues_record = PTADues.objects.filter(session=session, term=term).first()
             pta_dues = pta_dues_record.amount if pta_dues_record else Decimal('2000.00')
 
+        total_fees = parent.get_total_fees_for_term(session, term)
         payment_status = parent.get_payment_status_for_term(session, term)
+        
         family = {
             'parent_id': parent.id,
             'students': [
@@ -2080,12 +2106,14 @@ def admin_create_payment(request):
             'amount_due': family['amount_due'],
             'previous_payments': family['previous_payments'],
             'refunds': family['refunds'],
-            'is_first_term': family['is_first_term']
+            'is_first_term': family['is_first_term'],
+            'cache_invalidated': should_invalidate_cache
         })
+        
     except Exception as e:
         logger.error(f"Error in admin_create_payment: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
-
+    
 @login_required
 @group_required('Secretary', 'Director')
 def admin_edit_student_fee(request):
@@ -2098,7 +2126,7 @@ def admin_edit_student_fee(request):
         term = request.POST.get('term')
         new_amount = request.POST.get('new_amount')
 
-        # Validate inputs
+        
         if not all([student_id, session_id, term, new_amount]):
             logger.error(f"Missing required fields: student_id={student_id}, session_id={session_id}, term={term}, new_amount={new_amount}")
             return JsonResponse({'error': 'Missing required fields'}, status=400)
@@ -2128,7 +2156,7 @@ def admin_edit_student_fee(request):
             logger.error(f"Invalid term: {term}")
             return JsonResponse({'error': f'Invalid term: {term}'}, status=400)
 
-        # Update or create fee override
+        
         with transaction.atomic():
             fee_override, created = StudentFeeOverride.objects.update_or_create(
                 student=student,
@@ -2139,7 +2167,7 @@ def admin_edit_student_fee(request):
             action = 'created' if created else 'updated'
             logger.info(f"Student fee {action} for {student.full_name}, session {session.name}, term {term}, amount {new_amount}")
 
-        # Calculate updated totals
+        
         parent = student.parent
         parent_students = Student.objects.filter(parent=parent, is_active=True).select_related('current_class')
         total_student_fees = Decimal('0')
@@ -2180,37 +2208,87 @@ def admin_edit_student_fee(request):
     except Exception as e:
         logger.exception(f"Error editing student fee: {str(e)}")
         return JsonResponse({'error': f'Internal server error: {str(e)}'}, status=500)
+
+def get_optimized_payment_data(session, term):
+    """
+    Extract the common data fetching logic for both views
+    """
     
-@login_required
-@group_required('Secretary', 'Director')
-def admin_payment_report(request):
-    sessions = Session.objects.all()
-    current_session, current_term = get_current_session_term()
-    session_id = request.GET.get('session_id', current_session.id if current_session else '')
-    term = request.GET.get('term', current_term if current_term else '1')
-    sort_type = request.GET.get('sort_type', 'all')  # Default to show all
-
-    try:
-        session = Session.objects.get(id=session_id) if session_id else current_session
-        if term not in dict(TERM_CHOICES):
-            term = current_term or '1'
-    except Session.DoesNotExist:
-        session = current_session
-        term = current_term or '1'
-
-    parents = Parent.objects.filter(is_active=True).prefetch_related('students__current_class', 'payments')
+    parents = Parent.objects.filter(is_active=True).prefetch_related(
+        Prefetch(
+            'students', 
+            queryset=Student.objects.filter(is_active=True).select_related('current_class')
+        ),
+        Prefetch(
+            'payments', 
+            queryset=Payment.objects.filter(
+                session=session, 
+                term=term, 
+                status='Completed'
+            ).only('amount', 'parent_id')
+        )
+    ).only('id', 'phone_number', 'full_name')
+    
+    
+    fee_structures = {}
+    for fs in FeeStructure.objects.filter(session=session, term=term).select_related('class_level'):
+        fee_structures[(fs.class_level_id, fs.session_id, fs.term)] = fs.amount
+    
+    student_fee_overrides = {}
+    for sfo in StudentFeeOverride.objects.filter(session=session, term=term):
+        
+        student_fee_overrides[(sfo.student_id, sfo.session_id, sfo.term)] = sfo.amount
+    
+    
+    pta_dues_amount = Decimal('2000.00')  
+    if term == '1':
+        pta_dues = PTADues.objects.filter(session=session, term=term).first()
+        if pta_dues:
+            pta_dues_amount = pta_dues.amount
+    
+    refunds_dict = {}
+    for refund in Refund.objects.filter(session=session, term=term).values('parent_id', 'amount'):
+        parent_id = refund['parent_id']
+        refunds_dict.setdefault(parent_id, Decimal(0))
+        refunds_dict[parent_id] += refund['amount']
+    
     report_data = []
+    
     for parent in parents:
-        total_fees = parent.get_total_fees_for_term(session, term)
-        payment_status = parent.get_payment_status_for_term(session, term)
-        amount_paid = payment_status['amount_paid']
-        amount_due = payment_status['amount_due']
+        total_fees = Decimal(0)
+        students_info = []
+        
+        for student in parent.students.all():
+            if not student.current_class:
+                continue
+                
+            students_info.append(f"{student.full_name} - {student.current_class.level}")
+            
+            override_key = (student.admission_number, session.id, term)
+            if override_key in student_fee_overrides:
+                total_fees += student_fee_overrides[override_key]
+                continue
+            
+            fee_key = (student.current_class_id, session.id, term)
+            if fee_key in fee_structures:
+                total_fees += fee_structures[fee_key]
+        
+        if term == '1' and students_info:
+            total_fees += pta_dues_amount
+        
+        total_paid = sum(payment.amount for payment in parent.payments.all())
+        total_refunded = refunds_dict.get(parent.id, Decimal(0))
+        amount_paid = max(total_paid - total_refunded, Decimal(0))
+        amount_due = max(total_fees - amount_paid, Decimal(0))
+        
+        if not students_info or total_fees == 0:
+            continue
+            
         percentage_paid = (amount_paid / total_fees * 100) if total_fees > 0 else 0
-        students = parent.students.filter(is_active=True).select_related('current_class').order_by('current_class__level_order')
-        student_list = [f"{s.full_name} - {s.current_class.level}" for s in students if s.current_class]
         payment_category = 'full' if amount_due == 0 else 'partial' if amount_paid > 0 else 'none'
+        
         report_data.append({
-            'students': ', '.join(student_list) if student_list else 'No students',
+            'students': ', '.join(students_info),
             'parent_phone': parent.phone_number,
             'total_fees': float(total_fees),
             'amount_paid': float(amount_paid),
@@ -2218,24 +2296,65 @@ def admin_payment_report(request):
             'percentage_paid': round(percentage_paid, 2),
             'category': payment_category
         })
-
-    # Log the report data for debugging
-    logger.info(f"Generated report data: {len(report_data)} families")
-
-    # Group data by category
+    
     full_paid = [item for item in report_data if item['category'] == 'full']
     partial_paid = [item for item in report_data if item['category'] == 'partial']
     not_paid = [item for item in report_data if item['category'] == 'none']
-
-    # Log the counts for each category
-    logger.info(f"Full paid: {len(full_paid)}, Partial paid: {len(partial_paid)}, Not paid: {len(not_paid)}")
-
-    # Sort each group by amount_paid descending
+    
     full_paid.sort(key=lambda x: x['amount_paid'], reverse=True)
     partial_paid.sort(key=lambda x: x['amount_paid'], reverse=True)
     not_paid.sort(key=lambda x: x['amount_paid'], reverse=True)
+    
+    return {
+        'report_data': report_data,
+        'full_paid': full_paid,
+        'partial_paid': partial_paid,
+        'not_paid': not_paid,
+        'generated_at': timezone.now().isoformat()
+    }
 
-    # Filter and paginate based on sort_type
+@login_required
+@group_required('Secretary', 'Director')
+def admin_payment_report(request):
+    sessions = Session.objects.all()
+    current_session, current_term = get_current_session_term()
+    session_id = request.GET.get('session_id', current_session.id if current_session else '')
+    term = request.GET.get('term', current_term if current_term else '1')
+    sort_type = request.GET.get('sort_type', 'all')
+    
+    try:
+        session = Session.objects.get(id=session_id) if session_id else current_session
+        if term not in dict(TERM_CHOICES):
+            term = current_term or '1'
+    except Session.DoesNotExist:
+        session = current_session
+        term = current_term or '1'
+    
+    
+    cache_key = f"payment_report_{session.id}_{term}"
+    cached_data = cache.get(cache_key)
+    
+    if cached_data is None:
+        logger.info(f"Cache miss for {cache_key}, generating fresh data")
+        cached_data = get_optimized_payment_data(session, term)
+        
+        
+        cache.set(cache_key, cached_data, 900)
+        logger.info(f"Data cached for 15 minutes")
+    else:
+        logger.info(f"Cache hit for {cache_key}")
+    
+    
+    report_data = cached_data['report_data']
+    full_paid = cached_data['full_paid']
+    partial_paid = cached_data['partial_paid']
+    not_paid = cached_data['not_paid']
+    
+    
+    logger.info(f"Generated report data: {len(report_data)} families")
+    logger.info(f"Full paid: {len(full_paid)}, Partial paid: {len(partial_paid)}, Not paid: {len(not_paid)}")
+    
+    
     if sort_type == 'full':
         filtered_data = full_paid
     elif sort_type == 'partial':
@@ -2243,12 +2362,12 @@ def admin_payment_report(request):
     elif sort_type == 'none':
         filtered_data = not_paid
     else:
-        filtered_data = full_paid + partial_paid + not_paid  # All, in order: full, partial, none
-
-    paginator = Paginator(filtered_data, 10)
+        filtered_data = full_paid + partial_paid + not_paid  
+    
+    paginator = Paginator(filtered_data, 20)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-
+    
     context = {
         'sessions': sessions,
         'current_session': session,
@@ -2257,15 +2376,19 @@ def admin_payment_report(request):
         'page_obj': page_obj,
         'report_data': page_obj.object_list,
         'sort_type': sort_type,
-        'full_paid': full_paid,  # Pass full lists for grouped display
+        'full_paid': full_paid,  
         'partial_paid': partial_paid,
         'not_paid': not_paid,
         'full_paid_count': len(full_paid),
         'partial_paid_count': len(partial_paid),
         'not_paid_count': len(not_paid),
-        'role': 'admin'
+        'role': 'admin',
+        'cache_info': {
+            'is_cached': True,
+            'generated_at': cached_data.get('generated_at')
+        }
     }
-
+    
     return render(request, 'account/admin/payment_report.html', context)
 
 @login_required
@@ -2280,44 +2403,29 @@ def admin_payment_report_pdf(request):
     except Session.DoesNotExist:
         return HttpResponse("Session not found", status=404)
 
-    parents = Parent.objects.filter(is_active=True).prefetch_related('students__current_class', 'payments')
-    report_data = []
-    for parent in parents:
-        total_fees = parent.get_total_fees_for_term(session, term)
-        payment_status = parent.get_payment_status_for_term(session, term)
-        amount_paid = payment_status['amount_paid']
-        amount_due = payment_status['amount_due']
-        percentage_paid = (amount_paid / total_fees * 100) if total_fees > 0 else 0
-        students = parent.students.filter(is_active=True).select_related('current_class').order_by('current_class__level_order')
-        student_list = [f"{s.full_name} - {s.current_class.level}" for s in students if s.current_class]
-        payment_category = 'full' if amount_due == 0 else 'partial' if amount_paid > 0 else 'none'
-        report_data.append({
-            'students': ', '.join(student_list) if student_list else 'No students',
-            'parent_phone': parent.phone_number,
-            'total_fees': float(total_fees),
-            'amount_paid': float(amount_paid),
-            'amount_due': float(amount_due),
-            'percentage_paid': round(percentage_paid, 2),
-            'category': payment_category
-        })
+    
+    cache_key = f"payment_report_{session.id}_{term}"
+    cached_data = cache.get(cache_key)
+    
+    if cached_data is None:
+        logger.info(f"PDF Cache miss for {cache_key}, generating fresh data")
+        cached_data = get_optimized_payment_data(session, term)
+        
+        
+        cache.set(cache_key, cached_data, 900)
+        logger.info(f"PDF Data cached for 15 minutes")
+    else:
+        logger.info(f"PDF Cache hit for {cache_key}")
 
-    # Log the report data for debugging
-    logger.info(f"Generated PDF report data: {len(report_data)} families")
+    
+    full_paid = cached_data['full_paid']
+    partial_paid = cached_data['partial_paid']
+    not_paid = cached_data['not_paid']
 
-    # Group data by category
-    full_paid = [item for item in report_data if item['category'] == 'full']
-    partial_paid = [item for item in report_data if item['category'] == 'partial']
-    not_paid = [item for item in report_data if item['category'] == 'none']
-
-    # Log the counts for each category
+    
     logger.info(f"PDF - Full paid: {len(full_paid)}, Partial paid: {len(partial_paid)}, Not paid: {len(not_paid)}")
 
-    # Sort each group by amount_paid descending
-    full_paid.sort(key=lambda x: x['amount_paid'], reverse=True)
-    partial_paid.sort(key=lambda x: x['amount_paid'], reverse=True)
-    not_paid.sort(key=lambda x: x['amount_paid'], reverse=True)
-
-    # Filter based on sort_type
+    
     if sort_type == 'full':
         filtered_data = full_paid
     elif sort_type == 'partial':
@@ -2349,6 +2457,12 @@ def admin_payment_report_pdf(request):
     response['Content-Disposition'] = f'inline; filename="payment_report_{session.name}_{term}.pdf"'
     return response
 
+def invalidate_payment_report_cache(session, term):
+    """Call this function when new payments are processed"""
+    cache_key = f"payment_report_{session.id}_{term}"
+    cache.delete(cache_key)
+    logger.info(f"Payment report cache invalidated for {cache_key}")
+    
 @login_required
 @group_required('Secretary', 'Director')
 def admin_fee_statistics(request):
@@ -2501,7 +2615,7 @@ def admin_fee_statistics(request):
 
         total_expected += section_expected
 
-    # Add PTA dues to total_expected
+    
     if term == '1':
         pta_dues = PTADues.objects.filter(session=session, term=term).first()
         pta_amount = pta_dues.amount if pta_dues else Decimal('2000.00')
@@ -2673,7 +2787,7 @@ def admin_daily_payment_report(request):
     try:
         selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
-        selected_date = date.today()  # Use explicit date import
+        selected_date = date.today()  
         date_str = selected_date.strftime('%Y-%m-%d')
 
     payments = Payment.objects.filter(
@@ -2728,7 +2842,7 @@ def admin_daily_payment_report_pdf(request):
     try:
         selected_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
-        selected_date = date.today()  # Use explicit date import
+        selected_date = date.today()  
         date_str = selected_date.strftime('%Y-%m-%d')
 
     payments = Payment.objects.filter(

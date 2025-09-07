@@ -140,22 +140,7 @@
                                         <form method="POST" enctype="multipart/form-data">
                                             {% csrf_token %}
                                             {% if role == 'student' %}
-                                                <div class="mb-3">
-                                                    <label for="full_name" class="form-label hp-p1-body">Full Name</label>
-                                                    <input type="text" class="form-control" id="full_name" name="full_name" value="{{ student.full_name }}" required>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="address" class="form-label hp-p1-body">Address</label>
-                                                    <textarea class="form-control" id="address" name="address" required>{{ student.address }}</textarea>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="parent_phone" class="form-label hp-p1-body">Parent/Guardian Phone</label>
-                                                    <input type="text" class="form-control" id="parent_phone" name="parent_phone" value="{{ student.parent_phone }}" required>
-                                                </div>
-                                                <div class="mb-3">
-                                                    <label for="photo" class="form-label hp-p1-body">Profile Picture</label>
-                                                    <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
-                                                </div>
+                                            <p>Students cannot update their profile</p>
                                             {% elif role == 'teacher' %}
                                                 <div class="mb-3">
                                                     <label for="full_name" class="form-label hp-p1-body">Full Name</label>
@@ -192,7 +177,9 @@
                                                     <input type="text" class="form-control" id="last_name" name="last_name" value="{{ admin_user.last_name|default:'' }}">
                                                 </div>
                                             {% endif %}
+                                            {% if not role == 'student' %}
                                             <button type="submit" class="btn btn-primary mt-16">Update Profile</button>
+                                            {% endif %}
                                         </form>
                                         {% if role == 'parent' %}
                                             <hr class="my-4">

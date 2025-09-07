@@ -47,7 +47,7 @@
                     <img src="{% static 'main/images/logo.png' %}" alt="Rehoboth International School of Excellence" height="150" width="150">
                 </a>
                 <h2 class="hp-text-color-black-100 hp-text-color-dark-0 mb-16">Welcome to RISE Portal</h2>
-                <p class="hp-p1-body hp-text-color-black-80 hp-text-color-dark-30">Access your personalized dashboard as a student, teacher, or admin.</p>
+                <p class="hp-p1-body hp-text-color-black-80 hp-text-color-dark-30">Access your personalized dashboard as a student, teacher, parent or admin.</p>
                 <img class="hp-dark-none mt-32 w-75 mx-auto" src="{% static 'accounts/app-assets/img/pages/authentication/authentication-bg.svg' %}" alt="Background Image">
                 <img class="hp-dark-block mt-32 w-75 mx-auto" src="{% static 'accounts/app-assets/img/pages/authentication/authentication-bg-dark.svg' %}" alt="Background Image">
             </div>
@@ -66,7 +66,7 @@
                 <form id="loginForm" method="POST" action="{% url 'login' %}" class="needs-validation" novalidate>
                     {% csrf_token %}
                     <div class="mb-24">
-                        <label for="loginUsername" class="form-label">Admission Number or Staff Email</label>
+                        <label for="loginUsername" class="form-label">Admission Number or Email or Phone Number</label>
                         <input type="text" class="form-control" id="loginUsername" name="username" required aria-describedby="usernameFeedback">
                         <div id="usernameFeedback" class="invalid-feedback">Please enter a valid admission number or email.</div>
                     </div>

@@ -25,6 +25,12 @@
                 </svg>
                 <h1 class="mb-0 hp-text-color-black-0">Payment Report</h1>
                 <h4 class="mt-8 hp-text-color-black-0">View payment status for all families by session and term</h4>
+                {% if cache_info.is_cached %}
+                    <small class="text-muted">
+                        Data generated at: {{ cache_info.generated_at|date:"M d, Y H:i" }}
+                        (Cached for 15 minutes)
+                    </small>
+                {% endif %}
             </div>
         </div>
         <div class="col-12">
